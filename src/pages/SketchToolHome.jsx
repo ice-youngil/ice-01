@@ -15,7 +15,12 @@ import designButtonIcon from 'assets/images/design.png';
 import backButtonIcon from 'assets/images/back.png';
 import handIcon from 'assets/images/hand.png';
 
+// ====================== 이미지 조작 라이브러리 ==============================
+import html2canvas from "html2canvas";
+import saveAs from "file-saver";
+
 const SketchToolHome = () => {
+  
   const navigate = useNavigate();
   const canvasRef = useRef(null);
   const [selectedTool, setSelectedTool] = useState('pen');
@@ -33,8 +38,8 @@ const SketchToolHome = () => {
     fontFamily: 'Arial',
   });
   const [isAltPressed, setIsAltPressed] = useState(false);
-
-
+  const screenShotRef = useRef(null);
+  
   // ====================== 이미지 업로드 및 삭제 ==============================
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
@@ -49,8 +54,20 @@ const SketchToolHome = () => {
     }
   };
 
-  const handleSaveImage = () => {
-    document.querySelector('.save-button').click();
+  const handleSaveImage = async() => {
+    if (!screenShotRef.current) return;
+
+    try {
+      const div = screenShotRef.current;
+      const canvas = await html2canvas(div, { scale: 2 });
+      canvas.toBlob((blob) => {
+        if (blob !== null) {
+          saveAs(blob, "result.png");
+        }
+      });
+    } catch (error) {
+      console.error("Error converting div to image:", error);
+    }
   };
 
 // ====================== 3D 모델링 적용 ==============================
@@ -101,6 +118,8 @@ const SketchToolHome = () => {
   };
 
   useEffect(() => {
+    const htmlTitle = document.querySelector('title');
+    htmlTitle.innerHTML = "영일도방 스케치 툴"
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
 
@@ -133,15 +152,18 @@ const SketchToolHome = () => {
           적용하기
         </button>
       </div>
-      <CanvasComponent
-        selectedTool={selectedTool}
-        toolSize={toolSize}
-        eraserSize={eraserSize}
-        image={image}
-        onSaveHistory={saveHistory}
-        isAltPressed={isAltPressed}
-        selectedColor={selectedColor}
-      />
+      <div 
+        ref={screenShotRef}>
+        <CanvasComponent
+          selectedTool={selectedTool}
+          toolSize={toolSize}
+          eraserSize={eraserSize}
+          image={image}
+          onSaveHistory={saveHistory}
+          isAltPressed={isAltPressed}
+          selectedColor={selectedColor}
+        />
+      </div>
       <div className="sidebar-buttons">
         <SidebarButton icon={textButtonIcon} label="텍스트" onClick={() => setSelectedTool('text')} />
         <SidebarButton icon={eraserButtonIcon} label="지우개" onClick={() => setSelectedTool('eraser')} />

@@ -14,6 +14,10 @@ const Model = () => {
   const sceneRef = useRef(null);
 
   useEffect(() => {
+    
+    const htmlTitle = document.querySelector('title');
+    htmlTitle.innerHTML = "영일도방 3D 모델링"
+
     if (!image) return;
 
     if (rendererRef.current) {
