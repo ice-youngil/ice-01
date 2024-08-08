@@ -1,6 +1,6 @@
 // src/pages/PenSettings.jsx
 import React from 'react';
-import ColorPickerComponent from './ColorPickerComponent';
+import ColorPickerComponent from 'components/ColorPickerComponent';
 
 const PenSettings = ({ toolSize, onSizeChange, selectedColor, setSelectedColor }) => {
   return (

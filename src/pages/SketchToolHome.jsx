@@ -83,14 +83,15 @@ const SketchToolHome = () => {
       setIsModalOpen(false);
     };
 
-    const handleSelectShape = (shape) => {
+    const handleSelectShape = (selectedShape) => {
       setIsModalOpen(false);
 
-      if (shape === 'pottery') {
-        navigate('/ceramic-model', { state: { image } });
-      } else {
-        navigate('/rectangle-model', { state: { image, shape } });
-      }
+      navigate('/threeD-modeling', {
+        state: {
+          image: image, 
+          shape: selectedShape
+        }
+      });
     };
 
   const saveHistory = (image) => {
