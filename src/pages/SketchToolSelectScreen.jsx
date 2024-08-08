@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import background from '../assets/images/background73_287.png';
-import './SketchToolSelectScreen.css';
+import background from 'assets/images/background73_287.png';
+import 'assets/css/SketchToolSelectScreen.css';
 
 // SketchToolSelectScreen 컴포넌트 정의
 const SketchToolSelectScreen = () => {

@@ -136,7 +136,7 @@
 /* 캔버스 컨테이너 스타일 */
 .canvas-container {
   margin-top: 5%;
-  left: 4%;
+  left: 500px;
   height: calc(100vh) ; /* Adjust according to the height of the top-bar */
   display: flex;
   overflow: hidden;
@@ -210,47 +210,80 @@
 
 
 /* 새로 추가된 부분임*/
-/* 펜 도구 관련 스타일 */
-/* 펜 도구 관련 스타일 */
-.pen-tool, .eraser-tool {
-  position: relative;
-  display: inline-block;
-  z-index: 100; /* 높은 z-index로 설정하여 상호작용이 가능하도록 */
-}
-
-/* 펜 굵기 및 색상 선택 창 스타일 */
-.tool-settings-picker {
+/* 펜 설정 창 */
+.pen-settings-picker {
   position: absolute;
-  top: 0;
-  left: 100%;
-  transform: translateX(10px);
-  background-color: #ffffff;
-  border: 1px solid #ccc;
-  padding: 10px;
+  top: 50px; /* 이 값을 적절하게 조정하여 버튼의 위치에 맞추세요 */
+  left: 80px; /* 버튼 오른쪽에 창이 위치하도록 조정 */
+  z-index: 1000;
+  background-color: white;
+  border: 1px solid #ddd;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  z-index: 200; /* 캔버스보다 앞에 위치 */
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: 150px;
+  padding: 10px;
 }
 
-/* 펜 굵기 슬라이더 스타일 */
-.tool-size-slider {
-  width: 100%; /* 슬라이더가 컨테이너에 맞게 확장 */
-  height: 10px;
-  cursor: pointer;
+/* 지우개 설정 창 */
+.eraser-settings-picker {
+  position: absolute;
+  top: 150px; /* 이 값을 적절하게 조정하여 버튼의 위치에 맞추세요 */
+  left: 80px; /* 버튼 오른쪽에 창이 위치하도록 조정 */
+  z-index: 1000;
+  background-color: white;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  padding: 10px;
 }
 
-/* 반응형 스타일: 펜 및 지우개 버튼 바로 오른쪽에 위치 */
+/* 이모지 선택기 컨테이너 */
+.emoji-picker-container {
+  position: absolute;
+  top: 250px; /* 이 값을 적절하게 조정하여 버튼의 위치에 맞추세요 */
+  left: 80px; /* 버튼 오른쪽에 창이 위치하도록 조정 */
+  z-index: 1000;
+  background-color: white;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  padding: 10px;
+}
+
+/* 반응형 스타일 */
 @media (max-width: 768px) {
-  .tool-settings-picker {
-    position: fixed;
+  .pen-settings-picker, .eraser-settings-picker, .emoji-picker-container {
     top: auto;
-    left: auto;
-    right: 20px;
     bottom: 20px;
-    transform: none;
-    width: 80%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+  }
+}
+
+/* 색상 선택기 주변 스타일 */
+.color-picker-container {
+  position: relative;
+  background-color: white;
+  padding: 10px;
+  border-radius: 4px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.text-settings-picker {
+  position: absolute;
+  top: 350px; /* 적절히 조정 */
+  left: 80px; /* 적절히 조정 */
+  z-index: 1000;
+  background-color: white;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  padding: 10px;
+}
+
+/* 반응형 스타일 */
+@media (max-width: 768px) {
+  .text-settings-picker {
+    top: auto;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
   }
 }

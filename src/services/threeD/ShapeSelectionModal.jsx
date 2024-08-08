@@ -1,6 +1,6 @@
 // ShapeSelectionModal.js
 import React from 'react';
-import './ShapeSelectionModal.css';
+import 'assets/css/ShapeSelectionModal.css';
 
 const ShapeSelectionModal = ({ isOpen, onClose, onSelectShape }) => {
   if (!isOpen) {

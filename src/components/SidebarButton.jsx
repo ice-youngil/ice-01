@@ -1,5 +1,5 @@
 import React from 'react';
-import './SidebarButton.css';
+import 'assets/css/SidebarButton.css';
 
 const SidebarButton = ({ icon, label, onClick }) => {
   return (

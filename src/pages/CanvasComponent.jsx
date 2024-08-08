@@ -1,10 +1,11 @@
 import React, { useRef, useEffect, useState } from 'react';
-import './SketchToolHome.css';
+import 'assets/css/SketchToolHome.css';
 
-const CanvasComponent = ({ selectedTool, toolSize, eraserSize, image, onSaveHistory, selectedColor }) => { // eraserSize 추가
+const CanvasComponent = ({ selectedTool, toolSize, eraserSize, image, onSaveHistory, selectedColor, element }) => { // eraserSize 추가
   const canvasRef = useRef(null); 
   const drawingCanvasRef = useRef(null); 
-  const drawingContextRef = useRef(null); 
+  const drawingContextRef = useRef(null);
+  const elementCanvasRef = useRef(null);  
   const [isDrawing, setIsDrawing] = useState(false); 
   const [isPanning, setIsPanning] = useState(false); 
   const [startX, setStartX] = useState(0); 
@@ -124,6 +125,10 @@ const CanvasComponent = ({ selectedTool, toolSize, eraserSize, image, onSaveHist
     }
   }, [selectedTool, toolSize, eraserSize, selectedColor]);
 
+  useEffect(()=> {
+    elementCanvasRef.current = element;
+  },[element]);
+
   useEffect(() => {
     if (image) {
       const canvas = canvasRef.current;
@@ -148,13 +153,15 @@ const CanvasComponent = ({ selectedTool, toolSize, eraserSize, image, onSaveHist
       <canvas ref={canvasRef} className={image ? 'active-canvas' : 'inactive-canvas'} />
       <canvas
         ref={drawingCanvasRef}
+        
         onMouseDown={startDrawing}
         onMouseUp={finishDrawing}
         onMouseMove={draw}
         className={image ? 'active-canvas' : 'inactive-canvas'}
       />
+      
       {!image && <div className="placeholder">이미지를 불러와 주세요</div>}
-    </div>
+  </div>
   );
 };
 
