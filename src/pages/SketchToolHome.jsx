@@ -5,6 +5,7 @@ import CanvasComponent from './CanvasComponent';
 import TextSettings from 'components/TextSettings'
 import ToolSettings from 'components/ToolSettings';
 import ShapeSelectionModal from 'services/threeD/ShapeSelectionModal'
+import ThreeDModal from 'services/threeD/ThreeDModel';
 import 'assets/css/SketchHome.css';
 
 // ====================== 아이콘 ==============================
@@ -40,6 +41,8 @@ const SketchToolHome = () => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showToolSettings, setShowToolSettings] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false); // 모달 상태
+  const [is3DModalOpen, setIs3DModalOpen] = useState(false);
+  const [selectedShape, setSelectedShape] = useState(null); 
   const screenShotRef = useRef(null);
 
 
@@ -108,19 +111,16 @@ const SketchToolHome = () => {
       alert('이미지를 먼저 업로드해주세요.');
     }
   };
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setIs3DModalOpen(false);
   };
 
-  const handleSelectShape = (selectedShape) => {
+  const handleSelectShape = (shape) => {
+    setSelectedShape(shape);
     setIsModalOpen(false);
-
-    navigate('/threeD-modeling', {
-      state: {
-        image: image, 
-        shape: selectedShape
-      }
-    });
+    setIs3DModalOpen(true);
   };
 
   const handleButtonClick = (tool) => {
@@ -173,8 +173,10 @@ const SketchToolHome = () => {
             </button>
             <div class="top-function">
               <button class="top-load">
-                <img src={imageLoadButtoIcon}/>
-                <input type="file" onChange={handleImageUpload} />
+                <label>
+                  <img src={imageLoadButtoIcon}/>
+                  <input type="file" onChange={handleImageUpload} />
+                </label>
               </button>
               <button class="top-save" onClick={handleSaveImage}><img src={imageSaveButtonIcon} /></button>
             </div>
@@ -233,6 +235,12 @@ const SketchToolHome = () => {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onSelectShape={handleSelectShape}
+      />
+      <ThreeDModal
+        isOpen={is3DModalOpen}
+        onClose={handleCloseModal}
+        image={image}
+        shape={selectedShape}
       />
       <SidebarButton icon={undoIcon} label="undo-button" onClick={handleUndo} />
     </div>

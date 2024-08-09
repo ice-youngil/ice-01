@@ -1,193 +1,152 @@
 import React, { useRef, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import 'assets/css/Model.css';
 
-const ThreeDModel = () => {
-    // useLocation 훅을 사용하여 SketchToolHome에서 전달된 이미지 데이터를 받음
-    const location = useLocation();
-    // useNavigate 훅을 사용하여 SketchToolHome으로 돌아가는 네비게이션 설정
-    const navigate = useNavigate();
-    
-    const containerRef = useRef(null); // Three.js 렌더러가 배치될 컨테이너 참조
-    const rendererRef = useRef(null); // Three.js 렌더러 참조
-    const cameraRef = useRef(null); // Three.js 카메라 참조
-    const sceneRef = useRef(null); // Three.js 씬 참조
+import html2canvas from "html2canvas";
+import saveAs from "file-saver";
 
-    const info = {...location.state};
-    const image = info['image'];
-    const shape = info['shape']
+const ThreeDModal = ({ isOpen, onClose, image, shape }) => {
+    const containerRef = useRef(null);
+    const screenShotRef = useRef(null);
+    const aRef = useRef(null);
+
+    // const combinedRef = node => {
+    //     containerRef.current = node;
+    //     screenShotRef.current = node;
+    // };
     
     useEffect(() => {
-        console.log("image", image);
-        console.log("shape", shape);
-        // 이미지가 전달되지 않으면 아무 것도 하지 않음
-        if (!image) return;
-    
-        // 이미 렌더러가 존재하면 이전 렌더러를 정리함
-        if (rendererRef.current) {
-          containerRef.current.removeChild(rendererRef.current.domElement);
-          rendererRef.current.dispose();
-        }
-    
-        // 새로운 Three.js 씬 생성
+        if (!isOpen || !image) return;
+
+        const container = screenShotRef.current;
         const scene = new THREE.Scene();
-        sceneRef.current = scene;
-    
-        // 원근 투영으로 새로운 카메라 생성
-        // 사각형은 (0, 1 , 3.5)였고 도자기는 (0, 1, 5) 였음.
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 1, 5); // 카메라 위치 조정
-        cameraRef.current = camera;
-    
-        // 새로운 WebGL 렌더러 생성
         const renderer = new THREE.WebGLRenderer();
-        renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
-        renderer.setClearColor(0xffffff); // 배경색을 흰색으로 설정
-        containerRef.current.appendChild(renderer.domElement); // 렌더러를 컨테이너에 추가
-        rendererRef.current = renderer;
-    
-        // 카메라와의 사용자 상호작용을 위한 궤도 제어 생성
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        const a = renderer.domElement;
+        aRef.current = a;
+        aRef.current.className="aaa";
+        container.appendChild(a);
+
+        camera.position.z = 5;
         const controls = new OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true; // 감속(관성) 활성화
-        controls.dampingFactor = 0.05; // 감속 계수
-        controls.screenSpacePanning = false; // 화면 공간 팬닝 비활성화
-       
-        // 이미지를 텍스처로 로드하고 도자기 형상에 적용
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.25;
+        controls.enableZoom = true;
+
         const img = new Image();
         img.src = image;
 
-        if(shape === 'ceramic') {
-            img.onload = () => {
+        img.onload = () => {
+            const textureLoader = new THREE.TextureLoader();
+            const texture = textureLoader.load(image);
+
+            if (shape === 'ceramic') {
                 const imgWidth = img.width;
                 const imgHeight = img.height;
-          
-                // 이미지의 종횡비 계산
                 const aspectRatio = imgWidth / imgHeight;
-          
-                // 도자기 모양의 윤곽을 정의하는 점들 설정, 종횡비를 기준으로 스케일 조정
+
                 const points = [];
                 for (let i = 0; i <= 20; i++) {
-                  const x = (Math.sin(i * 0.1) * 0.5 + 0.5) * aspectRatio;
-                  const y = (i - 10) * 0.2;
-                  points.push(new THREE.Vector2(x, y));
+                    const x = (Math.sin(i * 0.1) * 0.5 + 0.5) * aspectRatio;
+                    const y = (i - 10) * 0.2;
+                    points.push(new THREE.Vector2(x, y));
                 }
-          
-                // 점들을 Y축을 중심으로 회전하여 선반 형상 생성
+
                 const geometry = new THREE.LatheGeometry(points, 32);
-          
-                // 이미지를 텍스처로 로드
-                const textureLoader = new THREE.TextureLoader();
-                const texture = textureLoader.load(image);
-          
-                // 로드된 텍스처로 재질 생성
                 const material = new THREE.MeshBasicMaterial({ map: texture });
-          
-                // 선반 형상과 재질로 메시 생성
-                const pottery = new THREE.Mesh(geometry, material);
-                scene.add(pottery); // 메시를 씬에 추가
-          
-                // 도자기 바닥을 막기 위해 원형 기하학 생성
+                const ceramic = new THREE.Mesh(geometry, material);
+                scene.add(ceramic);
+
                 const bottomGeometry = new THREE.CircleGeometry(points[0].x, 32);
-                const bottomMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513, side: THREE.DoubleSide }); // 양면 모두 갈색으로 설정
+                const bottomMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513, side: THREE.DoubleSide });
                 const bottom = new THREE.Mesh(bottomGeometry, bottomMaterial);
-                bottom.rotation.x = Math.PI / 2; // 평면을 수직으로 회전
-                bottom.position.y = points[0].y; // 도자기 바닥 위치에 맞추어 설정
-                scene.add(bottom); // 바닥 메시를 씬에 추가
-          
-                // 도자기보다 약간 큰 윤곽 형상 생성하여 테두리 효과 추가
+                bottom.rotation.x = Math.PI / 2;
+                bottom.position.y = points[0].y;
+                scene.add(bottom);
+
                 const outlinePoints = points.map(p => new THREE.Vector2(p.x * 1.05, p.y));
                 const outlineGeometry = new THREE.LatheGeometry(outlinePoints, 32);
-                // 다른 색상의 윤곽을 위한 재질 생성
                 const outlineMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513, side: THREE.BackSide });
-          
-                // 윤곽 형상과 재질로 윤곽 메시 생성
                 const outline = new THREE.Mesh(outlineGeometry, outlineMaterial);
-                scene.add(outline); // 윤곽 메시를 씬에 추가
-          
-                // 씬을 애니메이션으로 만들기 위한 함수, 도자기와 윤곽 회전 포함
+                scene.add(outline);
+
                 const animate = () => {
-                  requestAnimationFrame(animate); // 다음 프레임 요청
-          
-                  // 도자기와 윤곽을 매 프레임마다 약간씩 회전
-                  pottery.rotation.y -= 0.005;
-                  outline.rotation.y -= 0.005;
-          
-                  // 카메라 관점에서 씬을 렌더링
-                  renderer.render(scene, camera);
+                    requestAnimationFrame(animate);
+                    ceramic.rotation.y -= 0.005;
+                    outline.rotation.y -= 0.005;
+                    renderer.render(scene, camera);
                 };
-          
-                animate(); // 애니메이션 루프 시작
-            };
-        }        
-        else if(shape==='rectangle') {
-            img.onload = () => {
+
+                animate();
+            } else if (shape === 'rectangle') {
                 const imgWidth = img.width;
                 const imgHeight = img.height;
                 const aspectRatio = imgWidth / imgHeight;
                 const boxWidth = 2 * aspectRatio;
                 const boxHeight = 2;
-        
+
                 const geometry = new THREE.BoxGeometry(boxWidth, boxHeight, 0.2);
-                const textureLoader = new THREE.TextureLoader();
-                const texture = textureLoader.load(image);
-        
                 const materials = [
-                new THREE.MeshBasicMaterial({ color: 0x8B4513 }),
-                new THREE.MeshBasicMaterial({ color: 0x8B4513 }),
-                new THREE.MeshBasicMaterial({ color: 0x8B4513 }),
-                new THREE.MeshBasicMaterial({ color: 0x8B4513 }),
-                new THREE.MeshBasicMaterial({ map: texture }),
-                new THREE.MeshBasicMaterial({ color: 0x8B4513 }),
+                    new THREE.MeshBasicMaterial({ color: 0x8B4513 }),
+                    new THREE.MeshBasicMaterial({ color: 0x8B4513 }),
+                    new THREE.MeshBasicMaterial({ color: 0x8B4513 }),
+                    new THREE.MeshBasicMaterial({ color: 0x8B4513 }),
+                    new THREE.MeshBasicMaterial({ map: texture }),
+                    new THREE.MeshBasicMaterial({ color: 0x8B4513 }),
                 ];
-        
+
                 const box = new THREE.Mesh(geometry, materials);
                 scene.add(box);
-        
+
                 const outlineGeometry = new THREE.BoxGeometry(boxWidth + 0.2, boxHeight + 0.2, 0.2);
                 const outlineMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513, side: THREE.BackSide });
                 const outline = new THREE.Mesh(outlineGeometry, outlineMaterial);
                 scene.add(outline);
-        
+
                 const animate = () => {
-                requestAnimationFrame(animate);
-        
-                box.rotation.y -= 0.005;
-                outline.rotation.y -= 0.005;
-        
-                renderer.render(scene, camera);
+                    requestAnimationFrame(animate);
+                    box.rotation.y -= 0.005;
+                    outline.rotation.y -= 0.005;
+                    renderer.render(scene, camera);
                 };
-        
+
                 animate();
-            };
-        }             
-    }, [image]); // 의존성 배열에 이미지 포함; 이미지가 변경되면 이 효과를 다시 실행
+            }
+        };
+
+        return () => {
+            container.removeChild(renderer.domElement);
+            renderer.dispose();
+        };
+    }, [isOpen, image, shape]);
+
+    const handleSaveImage = async() => {
+        if (!aRef.current) return;
     
-    const handleClose = () => {
-        navigate(-1);
-      };
-    
-      const handleSave = () => {
-        const renderer = rendererRef.current;
-        if (renderer) {
-          const imgData = renderer.domElement.toDataURL('image/png');
-          const link = document.createElement('a');
-          link.href = imgData;
-          link.download = 'model_image.png';
-          link.click();
+        try {
+          const div = aRef.current;
+          const canvas = await html2canvas(div, { scale: 2 });
+          canvas.toBlob((blob) => {
+            if (blob !== null) {
+              saveAs(blob, "result.png");
+            }
+          });
+        } catch (error) {
+          console.error("Error converting div to image:", error);
         }
-    };
+      };
 
     return (
-        <div className="model-popup">
-        <div className="button-container">
-            <button className="save-button" onClick={handleSave}>저장하기</button>
-            <button className="close-button" onClick={handleClose}>닫기</button>
+        <div className={`modal ${isOpen ? 'open' : 'closed'}`}>
+            <div className="modal-content" ref={screenShotRef}>
+                <button className="ThreeD-save-button" onClick={handleSaveImage}>저장하기</button>
+                <button className="ThreeD-close-button" onClick={onClose}>닫기</button>
+            </div>
+            
         </div>
-        <div className="model-popup-content" ref={containerRef}></div>
-        </div>
-    )
+    );
 };
 
-export default ThreeDModel;
+export default ThreeDModal;
