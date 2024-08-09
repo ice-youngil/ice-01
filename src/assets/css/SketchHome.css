@@ -1,0 +1,158 @@
+@charset "utf-8";
+
+.sketchtoolhome-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-color: #ffffff;
+    font-size: 16px; /*부모영역 16px*/
+}
+  
+.top-bar {
+    position: fixed;
+    height: calc(6vh); /*sketchtoolhome-container 에서 6%*/
+    width: 100%;
+    top: 0;
+    left: 0;
+    right: 0;
+    background-color: #3d405b;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    /* padding: 0 1em; */
+    gap: 1em;
+    z-index: 2; /*언제나 다른 요소위에 나타나도록 우선순위 높게. 컨버스 컨테이너에 가려지지 않게*/
+}
+
+.top-bar .top-home {
+    display: flex;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-left : 1rem;
+    vertical-align: middle;
+} /* 탑바 하위 개체(홈) */
+
+.top-load, .top-save {
+    border: none;
+    background: none;
+    cursor: pointer;
+    vertical-align: middle;
+    margin-right: 1rem;
+}
+
+.side-bar {
+    position: fixed;
+    background-color: #3d405b;
+    z-index: 2; /*top-bar와 마찬가지*/
+}
+
+.side-text, .side-eraser, .side-elements, .side-pen, .side-handdler {
+    position: flex;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: white;
+    font-size: 1rem;
+} /* 사이드바 하위 개체(텍스트,지우개,펜,요소,핸들러) */
+
+.canvas-container {
+    display: block;/* 이미지 노출 영역 지정 할 수 있게 */
+    overflow: hidden;/* 컨테이너 영역보다 큰 이미지는 스크롤 할 수 있게 */
+    position: fixed;/* 모바일 및 웹 두가지 화면에서 개별 지정할 수 있게 */
+    align-items: center;/* 수직 중앙 정렬 */
+    justify-items: center;/* 수평 중앙 정렬 */
+    z-index: 1;/* top,side보다는 우선순위 다르게 */
+    background-color: #f4f1de;
+}
+
+.undo-button {
+    z-index: 2;
+    border: none;
+    background: none;
+} /* 되돌리기 버튼 */
+
+@media only screen and (max-width: 1000px) {
+    .side-bar {
+        position: fixed;
+        bottom: 0px;
+        left: 0px;
+        height: calc(7vh);
+        width: 100%;
+        align-items: center;/* 수직 중앙 정렬 */
+        justify-content: space-between;/* 수평 중앙 정렬 */
+        display: flex;
+        /* padding: 0 1em; */
+    }
+
+    .side-function {
+        display: flex;
+        flex-direction: row;
+        margin-left: 1rem;
+        gap: 0.5em;
+    }
+
+    .side-apply {
+        margin-right: 1rem;
+        vertical-align: middle;
+        background: none;
+        border: none;
+    }
+
+    .canvas-container{
+        height: calc(100vh);
+        width: calc(100vw);
+        left: 0px;
+        top: 0px;
+    }
+
+    .undo-button {
+        position: fixed;
+        bottom: 10%;
+        right: 0.5rem;
+    }
+}/*모바일 및 타블렛 대응*/
+
+@media only screen and (min-width: 1001px) {
+    .side-bar {
+        position: fixed;
+        top: 6%;
+        left: 0px;
+        width: 7%;
+        height: 94%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .side-function {
+        margin-top: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .side-apply {
+        border: none;
+        background: none;
+        margin-bottom: 1rem;
+    }
+
+    .canvas-container{
+        height: calc(100vh);
+        width: calc(100vw);
+        left: 0px;
+        top: 0px;
+    }
+
+    .undo-button {
+        position: fixed;
+        bottom: 1%;
+        right: 1%;
+    }
+
+}/*웹화면 대응*/
