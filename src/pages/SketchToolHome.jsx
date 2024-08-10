@@ -4,7 +4,9 @@ import SidebarButton from 'components/SidebarButton';
 import CanvasComponent from './CanvasComponent';
 import TextSettings from 'components/TextSettings'
 import ToolSettings from 'components/ToolSettings';
+import ThreeDModal from 'services/threeD/ThreeDModelCopy';
 import ShapeSelectionModal from 'services/threeD/ShapeSelectionModal'
+import CanvasSection from './CanvasSection';
 import 'assets/css/SketchHome.css';
 
 // ====================== 아이콘 ==============================
@@ -25,11 +27,13 @@ import undoIcon from 'assets/icon/undo.png';
 // ====================== 이미지 조작 라이브러리 ==============================
 import html2canvas from "html2canvas";
 import saveAs from "file-saver";
+import EmojiPicker from 'emoji-picker-react';
 
 const SketchToolHome = () => {
   const navigate = useNavigate();
   const canvasRef = useRef(null);
   const [selectedTool, setSelectedTool] = useState('pen');
+  
   const [image, setImage] = useState(null);
   const [toolSize, setToolSize] = useState(5);
   const [eraserSize, setEraserSize] = useState(10);
@@ -40,11 +44,16 @@ const SketchToolHome = () => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showToolSettings, setShowToolSettings] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false); // 모달 상태
+  const [is3DModalOpen, setIs3DModalOpen] = useState(false);
+  const [selectedShape, setSelectedShape] = useState(null); 
   const screenShotRef = useRef(null);
+  const [rowImage, setRowImage] = useState(null);
+
 
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
+    setRowImage(file);
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -108,19 +117,16 @@ const SketchToolHome = () => {
       alert('이미지를 먼저 업로드해주세요.');
     }
   };
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setIs3DModalOpen(false);
   };
 
-  const handleSelectShape = (selectedShape) => {
+  const handleSelectShape = (shape) => {
+    setSelectedShape(shape);
     setIsModalOpen(false);
-
-    navigate('/threeD-modeling', {
-      state: {
-        image: image, 
-        shape: selectedShape
-      }
-    });
+    setIs3DModalOpen(true);
   };
 
   const handleButtonClick = (tool) => {
@@ -137,11 +143,11 @@ const SketchToolHome = () => {
     } else {
       setSelectedTool(tool);
 
-      if (tool === 'emoji') {
-        setShowEmojiPicker(true);
-      } else if (tool === 'pen' || tool === 'eraser') {
-        setShowToolSettings(true);
-      }
+      // if (tool === 'emoji') {
+      //   setShowEmojiPicker(true);
+      // } else if (tool === 'pen' || tool === 'eraser') {
+      //   setShowToolSettings(true);
+      // }
     }
   };
 
@@ -165,6 +171,9 @@ const SketchToolHome = () => {
     }
   };
 
+
+
+
   return (
     <div className="sketchtoolhome-container">
       <div class="top-bar">
@@ -181,7 +190,10 @@ const SketchToolHome = () => {
         </div>
       <div 
         ref={screenShotRef}>
-        <CanvasComponent
+          <CanvasSection
+            image={rowImage}
+          />
+        {/* <CanvasComponent
         ref={canvasRef}
         selectedTool={selectedTool}
         toolSize={toolSize}
@@ -189,9 +201,10 @@ const SketchToolHome = () => {
         image={image}
         onSaveHistory={saveHistory}
         selectedColor={selectedColor}
-      />
+        /> */}
       </div>
-      <div className="side-bar">
+      
+      {/* <div className="side-bar">
         <div className="side-function">
           <SidebarButton icon={textIcon} label="side-text" onClick={() => handleButtonClick('text')} />
           <SidebarButton icon={eraserIcon} label="side-eraser" onClick={() => handleButtonClick('eraser')} />
@@ -199,8 +212,8 @@ const SketchToolHome = () => {
           <SidebarButton icon={penIcon} label="side-pen" onClick={() => handleButtonClick('pen')} />
         </div>
         <SidebarButton icon={threeDIcon} label="side-apply" onClick={handleApplyModel} />
-      </div>
-      {(selectedTool === 'pen' || selectedTool === 'eraser') && showToolSettings && (
+      </div> */}
+      {/* {(selectedTool === 'pen' || selectedTool === 'eraser') && showToolSettings && (
         <ToolSettings
           selectedTool={selectedTool}
           toolSize={toolSize}
@@ -228,12 +241,24 @@ const SketchToolHome = () => {
           showEmojiPicker={showEmojiPicker}
           closeSettings={closeSettings}
         />
-      )}
-      <ShapeSelectionModal
+      )}*/}
+
+      
+
+      <ShapeSelectionModal    
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onSelectShape={handleSelectShape}
       />
+      <ThreeDModal
+        isOpen={is3DModalOpen}
+        onClose={handleCloseModal}
+        image={image}
+        shape={selectedShape}
+      />
+      <div className='side-bar'>
+        <SidebarButton icon={threeDIcon} label="side-apply" onClick={handleApplyModel} />
+      </div>      
       <SidebarButton icon={undoIcon} label="undo-button" onClick={handleUndo} />
     </div>
   );
