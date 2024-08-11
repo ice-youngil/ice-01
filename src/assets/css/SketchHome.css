@@ -19,7 +19,6 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    /* padding: 0 1em; */
     gap: 1em;
     z-index: 2; /*언제나 다른 요소위에 나타나도록 우선순위 높게. 컨버스 컨테이너에 가려지지 않게*/
 }
@@ -48,7 +47,7 @@
     z-index: 2; /*top-bar와 마찬가지*/
 }
 
-.side-text, .side-eraser, .side-elements, .side-pen, .side-handdler {
+.side-text, .side-eraser, .side-elements, .side-pen, .side-handdler, .side-Hand{
     position: flex;
     display: flex;
     align-items: center;
@@ -70,11 +69,46 @@
     background-color: #f4f1de;
 }
 
-.undo-button {
+
+/* 변경한 CSS Redo-Button이 추가되면서 바뀜 web에서는 위치와 mobile에서 위치가 다름 */
+.undo-button,
+.redo-button {
     z-index: 2;
     border: none;
     background: none;
-} /* 되돌리기 버튼 */
+    cursor: pointer;
+} /* 되돌리기 및 다시 실행 버튼 */
+
+.undo-button {
+    position: fixed;
+    bottom: 10%;
+    right: 1.5rem;
+}
+
+.redo-button {
+    position: fixed;
+    bottom: 10%;
+    right: 0.5rem;
+}
+
+.placeholder {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.canvas-container canvas {
+    position: absolute;
+    border: 1px solid #ddd;
+    cursor: grab; /* 기본 커서 스타일 */
+    transition: transform 0.2s ease; /* 부드러운 이동을 위한 트랜지션 */
+    border: 5px solid black; 
+}
+
+.inactive-canvas {
+    display: none;
+}
 
 @media only screen and (max-width: 1000px) {
     .side-bar {
@@ -86,7 +120,6 @@
         align-items: center;/* 수직 중앙 정렬 */
         justify-content: space-between;/* 수평 중앙 정렬 */
         display: flex;
-        /* padding: 0 1em; */
     }
 
     .side-function {
@@ -110,12 +143,15 @@
         top: 0px;
     }
 
-    .undo-button {
+    .undo-button,
+    .redo-button {
         position: fixed;
         bottom: 10%;
         right: 0.5rem;
+        margin-right: 1rem;
     }
-}/*모바일 및 타블렛 대응*/
+
+} /* 모바일 및 타블렛 대응 */
 
 @media only screen and (min-width: 1001px) {
     .side-bar {
@@ -149,10 +185,18 @@
         top: 0px;
     }
 
-    .undo-button {
+    .undo-button{
         position: fixed;
         bottom: 1%;
         right: 1%;
+        margin-right: 1rem;
+
+    }
+    .redo-button{
+        position: fixed;
+        bottom: 1%;
+        right: 3%;
+        margin-right: 1rem;
     }
 
-}/*웹화면 대응*/
+} /* 웹 화면 대응 */

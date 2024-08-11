@@ -1,33 +1,26 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import 'assets/css/Model.css';
-
-import html2canvas from "html2canvas";
-import saveAs from "file-saver";
+import { saveAs } from 'file-saver';
 
 const ThreeDModal = ({ isOpen, onClose, image, shape }) => {
     const containerRef = useRef(null);
-    const screenShotRef = useRef(null);
-    const aRef = useRef(null);
+    const canvasRef = useRef(null);
+    const [imageBlob, setImageBlob] = useState(null);
 
-    // const combinedRef = node => {
-    //     containerRef.current = node;
-    //     screenShotRef.current = node;
-    // };
-    
     useEffect(() => {
         if (!isOpen || !image) return;
 
-        const container = screenShotRef.current;
+        const container = containerRef.current;
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer();
         renderer.setSize(window.innerWidth, window.innerHeight);
-        const a = renderer.domElement;
-        aRef.current = a;
-        aRef.current.className="aaa";
-        container.appendChild(a);
+        renderer.setClearColor(0xffffff, 1);
+        const canvas = renderer.domElement;
+        canvasRef.current = canvas;
+        container.appendChild(canvas);
 
         camera.position.z = 5;
         const controls = new OrbitControls(camera, renderer.domElement);
@@ -36,11 +29,14 @@ const ThreeDModal = ({ isOpen, onClose, image, shape }) => {
         controls.enableZoom = true;
 
         const img = new Image();
+        img.crossOrigin = 'Anonymous'; // CORS 문제 방지를 위해 설정
         img.src = image;
 
         img.onload = () => {
             const textureLoader = new THREE.TextureLoader();
             const texture = textureLoader.load(image);
+
+            let geometry, material, mesh;
 
             if (shape === 'ceramic') {
                 const imgWidth = img.width;
@@ -54,10 +50,9 @@ const ThreeDModal = ({ isOpen, onClose, image, shape }) => {
                     points.push(new THREE.Vector2(x, y));
                 }
 
-                const geometry = new THREE.LatheGeometry(points, 32);
-                const material = new THREE.MeshBasicMaterial({ map: texture });
-                const ceramic = new THREE.Mesh(geometry, material);
-                scene.add(ceramic);
+                geometry = new THREE.LatheGeometry(points, 32);
+                material = new THREE.MeshBasicMaterial({ map: texture });
+                mesh = new THREE.Mesh(geometry, material);
 
                 const bottomGeometry = new THREE.CircleGeometry(points[0].x, 32);
                 const bottomMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513, side: THREE.DoubleSide });
@@ -72,9 +67,11 @@ const ThreeDModal = ({ isOpen, onClose, image, shape }) => {
                 const outline = new THREE.Mesh(outlineGeometry, outlineMaterial);
                 scene.add(outline);
 
+                scene.add(mesh);
+
                 const animate = () => {
                     requestAnimationFrame(animate);
-                    ceramic.rotation.y -= 0.005;
+                    mesh.rotation.y -= 0.005;
                     outline.rotation.y -= 0.005;
                     renderer.render(scene, camera);
                 };
@@ -87,7 +84,7 @@ const ThreeDModal = ({ isOpen, onClose, image, shape }) => {
                 const boxWidth = 2 * aspectRatio;
                 const boxHeight = 2;
 
-                const geometry = new THREE.BoxGeometry(boxWidth, boxHeight, 0.2);
+                geometry = new THREE.BoxGeometry(boxWidth, boxHeight, 0.2);
                 const materials = [
                     new THREE.MeshBasicMaterial({ color: 0x8B4513 }),
                     new THREE.MeshBasicMaterial({ color: 0x8B4513 }),
@@ -97,54 +94,57 @@ const ThreeDModal = ({ isOpen, onClose, image, shape }) => {
                     new THREE.MeshBasicMaterial({ color: 0x8B4513 }),
                 ];
 
-                const box = new THREE.Mesh(geometry, materials);
-                scene.add(box);
+                mesh = new THREE.Mesh(geometry, materials);
 
                 const outlineGeometry = new THREE.BoxGeometry(boxWidth + 0.2, boxHeight + 0.2, 0.2);
                 const outlineMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513, side: THREE.BackSide });
                 const outline = new THREE.Mesh(outlineGeometry, outlineMaterial);
                 scene.add(outline);
 
+                scene.add(mesh);
+
                 const animate = () => {
                     requestAnimationFrame(animate);
-                    box.rotation.y -= 0.005;
+                    mesh.rotation.y -= 0.005;
                     outline.rotation.y -= 0.005;
                     renderer.render(scene, camera);
                 };
 
                 animate();
             }
+
+            // 이미지 데이터 캡처
+            const captureImage = () => {
+                renderer.render(scene, camera);
+                canvas.toBlob((blob) => {
+                    if (blob) {
+                        setImageBlob(blob);
+                    }
+                }, 'image/png');
+            };
+
+            // 렌더링 후 캡처
+            setTimeout(captureImage, 1000); // 렌더링 시간이 필요한 경우 조정
         };
 
         return () => {
-            container.removeChild(renderer.domElement);
+            container.removeChild(canvas);
             renderer.dispose();
         };
     }, [isOpen, image, shape]);
 
-    const handleSaveImage = async() => {
-        if (!aRef.current) return;
-    
-        try {
-          const div = aRef.current;
-          const canvas = await html2canvas(div, { scale: 2 });
-          canvas.toBlob((blob) => {
-            if (blob !== null) {
-              saveAs(blob, "result.png");
-            }
-          });
-        } catch (error) {
-          console.error("Error converting div to image:", error);
+    const handleSaveImage = () => {
+        if (imageBlob) {
+            saveAs(imageBlob, 'result.png');
         }
-      };
+    };
 
     return (
         <div className={`modal ${isOpen ? 'open' : 'closed'}`}>
-            <div className="modal-content" ref={screenShotRef}>
+            <div className="modal-content" ref={containerRef}>
                 <button className="ThreeD-save-button" onClick={handleSaveImage}>저장하기</button>
                 <button className="ThreeD-close-button" onClick={onClose}>닫기</button>
             </div>
-            
         </div>
     );
 };
