@@ -1,12 +1,10 @@
 import React, { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import SidebarButton from 'components/SidebarButton';
-import CanvasComponent from './CanvasComponent';
-import TextSettings from 'components/TextSettings'
+import CanvasComponent from './CanvasComponent2';
+import TextSettings from 'components/TextSettings';
 import ToolSettings from 'components/ToolSettings';
-import ThreeDModal from 'services/threeD/ThreeDModelCopy';
-import ShapeSelectionModal from 'services/threeD/ShapeSelectionModal'
-import CanvasSection from './CanvasSection';
+import ShapeSelectionModal from 'services/threeD/ShapeSelectionModal';
+import ThreeDModal from 'services/threeD/ThreeDModel';
 import 'assets/css/SketchHome.css';
 
 // ====================== 아이콘 ==============================
@@ -15,31 +13,26 @@ import 'assets/css/SketchHome.css';
 import homeIcon from 'assets/icon/home.png';
 import imageLoadButtoIcon from 'assets/icon/load.png';
 import imageSaveButtonIcon from 'assets/icon/save.png';
+import redoIcon from 'assets/icon/redo.png'; // Redo 아이콘 추가
 
 // Sidebar
 import textIcon from 'assets/icon/text.png';
-import eraserIcon from 'assets/icon/eraser.png';
 import elementIcon from 'assets/icon/element.png';
 import penIcon from 'assets/icon/pen.png';
 import threeDIcon from 'assets/icon/apply.png';
 import undoIcon from 'assets/icon/undo.png';
 
-// ====================== 이미지 조작 라이브러리 ==============================
 import html2canvas from "html2canvas";
 import saveAs from "file-saver";
-import EmojiPicker from 'emoji-picker-react';
+import EmojiSettings from 'components/EmojiSettings';
 
 const SketchToolHome = () => {
-  const navigate = useNavigate();
   const canvasRef = useRef(null);
   const [selectedTool, setSelectedTool] = useState('pen');
-  
   const [image, setImage] = useState(null);
   const [toolSize, setToolSize] = useState(5);
   const [eraserSize, setEraserSize] = useState(10);
   const [selectedColor, setSelectedColor] = useState('#000000');
-  const [history, setHistory] = useState([]);
-  const [currentStep, setCurrentStep] = useState(-1);
   const [showTextTool, setShowTextTool] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showToolSettings, setShowToolSettings] = useState(false);
@@ -47,13 +40,12 @@ const SketchToolHome = () => {
   const [is3DModalOpen, setIs3DModalOpen] = useState(false);
   const [selectedShape, setSelectedShape] = useState(null); 
   const screenShotRef = useRef(null);
-  const [rowImage, setRowImage] = useState(null);
-
-
+  const [history, setHistory] = useState([]); // Undo 히스토리 상태 관리
+  const [redoHistory, setRedoHistory] = useState([]); // Redo 히스토리 상태 관리
+  const [emojiUrl, setEmojiUrl] = useState(null);
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
-    setRowImage(file);
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -62,9 +54,6 @@ const SketchToolHome = () => {
         }
         const newImage = e.target.result;
         setImage(newImage);
-        setHistory([newImage]);
-        setCurrentStep(0);
-        setToolSize(5);
       };
       reader.readAsDataURL(file);
     }
@@ -86,28 +75,36 @@ const SketchToolHome = () => {
     }
   };
 
-  const saveHistory = () => {
-    if (canvasRef.current) {
-      const dataUrl = canvasRef.current.getMergedImage();
-      setHistory((prevHistory) => [...prevHistory.slice(0, currentStep + 1), dataUrl]);
-      setCurrentStep((prevStep) => prevStep + 1);
+  const handleUndoClick = () => {
+    if (history.length > 1) {
+      const previousHistory = history.slice(0, -1);
+      setRedoHistory((prevRedoHistory) => [...prevRedoHistory, history[history.length - 1]]); // Redo 히스토리에 저장
+      setHistory(previousHistory);
+
+      const lastState = previousHistory[previousHistory.length - 1];
+      if (canvasRef.current) {
+        const canvas = canvasRef.current.getCanvas();
+        canvas.loadFromJSON(lastState, () => {
+          canvas.renderAll();
+        });
+      }
     }
   };
 
-  const handleUndo = () => {
-    if (currentStep > 0) {
-      setCurrentStep((prevStep) => prevStep - 1);
-      const previousImage = history[currentStep];
-      setImage(previousImage);
-    } else if (currentStep === 0 && history.length > 1) {
-      setImage(history[0]);
-    } else if (currentStep === 0 && history.length === 1) {
-      setImage(history[0]);
+  const handleRedoClick = () => {
+    if (redoHistory.length > 0) {
+      const lastRedoState = redoHistory[redoHistory.length - 1];
+      setRedoHistory(redoHistory.slice(0, -1)); // Redo 히스토리에서 제거
+  
+      if (canvasRef.current) {
+        const canvas = canvasRef.current.getCanvas(); // fabric.Canvas 객체 가져오기
+        setHistory((prevHistory) => [...prevHistory, lastRedoState]); // Undo 히스토리에 저장
+        canvas.loadFromJSON(lastRedoState, () => {
+          canvas.renderAll();
+        });
+      }
     }
   };
-
-
-
   // ====================== 3D 모델링 적용 ==============================
 
   const handleApplyModel = () => {
@@ -143,11 +140,11 @@ const SketchToolHome = () => {
     } else {
       setSelectedTool(tool);
 
-      // if (tool === 'emoji') {
-      //   setShowEmojiPicker(true);
-      // } else if (tool === 'pen' || tool === 'eraser') {
-      //   setShowToolSettings(true);
-      // }
+      if (tool === 'emoji') {
+        setShowEmojiPicker(true);
+      } else if (tool === 'pen') {
+        setShowToolSettings(true);
+      }
     }
   };
 
@@ -160,60 +157,69 @@ const SketchToolHome = () => {
   const handleAddText = (textSettings) => {
     if (canvasRef.current) {
       canvasRef.current.addText(textSettings);
-      saveHistory();
     }
   };
   
-  const handleSelectEmoji = (emoji) => {
+  const handleSelectEmoji = (EmojiSettings) => {
     if (canvasRef.current) {
-      canvasRef.current.addEmoji(emoji);
-      saveHistory();
+      canvasRef.current.addEmoji(EmojiSettings);
     }
   };
 
-
-
+  const handleHistoryChange = (newHistory) => {
+    setHistory((prevHistory) => [...prevHistory, newHistory]); // 새로운 히스토리를 상태로 설정
+  };
 
   return (
     <div className="sketchtoolhome-container">
-      <div class="top-bar">
-            <button class="top-home">
-              <img src={homeIcon} />
-            </button>
-            <div class="top-function">
-              <button class="top-load">
-                <img src={imageLoadButtoIcon}/>
-                <input type="file" onChange={handleImageUpload} />
-              </button>
-              <button class="top-save" onClick={handleSaveImage}><img src={imageSaveButtonIcon} /></button>
-            </div>
+      <div className="top-bar">
+        <button className="top-home">
+          <img src={homeIcon} alt="Home" />
+        </button>
+        <div className="top-function">
+          <button className="top-load" onClick={() => document.getElementById('fileupload').click()}>
+            <img src={imageLoadButtoIcon} alt="Load" />
+            <input 
+              id="fileupload" 
+              type="file" 
+              onChange={handleImageUpload} 
+              style={{ display: 'none' }} 
+            />
+          </button>
+          <button className="top-save" onClick={handleSaveImage}>
+            <img src={imageSaveButtonIcon} alt="Save" />
+          </button>
         </div>
-      <div 
-        ref={screenShotRef}>
-          <CanvasSection
-            image={rowImage}
-          />
-        {/* <CanvasComponent
-        ref={canvasRef}
-        selectedTool={selectedTool}
-        toolSize={toolSize}
-        eraserSize={eraserSize}
-        image={image}
-        onSaveHistory={saveHistory}
-        selectedColor={selectedColor}
-        /> */}
       </div>
-      
-      {/* <div className="side-bar">
+      <div ref={screenShotRef}>
+        <CanvasComponent
+        // fabric canvas 
+          ref={canvasRef}
+          // 펜 설정할지 이모지선택할지 여부다 
+          selectedTool={selectedTool}
+          // ㅇㄻㄴㅇㄹㄴ
+          toolSize={toolSize}
+          // 백그라운드이미지 
+          image={image}
+          selectedColor={selectedColor}
+          onHistoryChange={handleHistoryChange} // 히스토리 변경사항을 CanvasComponent로 전달
+        />
+        <button className="undo-button" onClick={handleUndoClick}>
+          <img src={undoIcon} alt="Undo" />
+        </button>
+        <button className="redo-button" onClick={handleRedoClick}> {/* Redo 버튼 추가 */}
+          <img src={redoIcon} alt="Redo" />
+        </button>
+      </div>
+      <div className="side-bar">
         <div className="side-function">
           <SidebarButton icon={textIcon} label="side-text" onClick={() => handleButtonClick('text')} />
-          <SidebarButton icon={eraserIcon} label="side-eraser" onClick={() => handleButtonClick('eraser')} />
-          <SidebarButton icon={elementIcon} label="side-elements" onClick={() => handleButtonClick('element')} />
+          <SidebarButton icon={elementIcon} label="side-elements" onClick={() => handleButtonClick('emoji')} />
           <SidebarButton icon={penIcon} label="side-pen" onClick={() => handleButtonClick('pen')} />
         </div>
         <SidebarButton icon={threeDIcon} label="side-apply" onClick={handleApplyModel} />
-      </div> */}
-      {/* {(selectedTool === 'pen' || selectedTool === 'eraser') && showToolSettings && (
+      </div>
+      {(selectedTool === 'pen') && showToolSettings && (
         <ToolSettings
           selectedTool={selectedTool}
           toolSize={toolSize}
@@ -224,7 +230,7 @@ const SketchToolHome = () => {
           setEraserSize={setEraserSize}
           showEmojiPicker={showEmojiPicker}
           closeSettings={closeSettings}
-          addEmojiToCanvas={handleSelectEmoji}
+
         />
       )}
       {showTextTool && (
@@ -236,16 +242,15 @@ const SketchToolHome = () => {
         </div>
       )}
       {showEmojiPicker && (
-        <ToolSettings
+        <EmojiSettings
           selectedTool="emoji"
           showEmojiPicker={showEmojiPicker}
           closeSettings={closeSettings}
+          setEmojiUrl={setEmojiUrl}
+          onAddEmoji={handleSelectEmoji}
         />
-      )}*/}
-
-      
-
-      <ShapeSelectionModal    
+      )}
+      <ShapeSelectionModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onSelectShape={handleSelectShape}
@@ -256,10 +261,6 @@ const SketchToolHome = () => {
         image={image}
         shape={selectedShape}
       />
-      <div className='side-bar'>
-        <SidebarButton icon={threeDIcon} label="side-apply" onClick={handleApplyModel} />
-      </div>      
-      <SidebarButton icon={undoIcon} label="undo-button" onClick={handleUndo} />
     </div>
   );
 };

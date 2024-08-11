@@ -1,73 +1,65 @@
 // ToolSettings.jsx
-import React, { useState } from 'react';
+import React from 'react';
+import Picker from 'emoji-picker-react'; // 이모지 선택기 import
+import 'assets/css/ToolSettings.css';
 
-const TextTool = ({ onAddText, closeSettings, canvasWidth, canvasHeight }) => {
-  const [text, setText] = useState('');
-  const [fontSize, setFontSize] = useState(2); // % 단위로 설정
-  const [color, setColor] = useState('#000000');
-  const [fontFamily, setFontFamily] = useState('Arial');
-
-  const handleAddText = () => {
-    // 텍스트 박스의 초기 위치를 캔버스 크기에 따라 동적으로 설정
-    const initialPosition = {
-      top: Math.min(10, (canvasHeight - fontSize) / canvasHeight * 100), // 위쪽 여백이 10%를 넘지 않도록 제한
-      left: Math.min(10, (canvasWidth - fontSize * 5) / canvasWidth * 100) // 왼쪽 여백이 10%를 넘지 않도록 제한
-    };
-
-    onAddText({
-      text,
-      fontSize,
-      color,
-      fontFamily,
-      position: initialPosition
-    });
-    setText('');
-  };
+const ToolSettings = ({
+  selectedTool,
+  toolSize,
+  setToolSize,
+  selectedColor,
+  setSelectedColor,
+  eraserSize,
+  setEraserSize,
+  showEmojiPicker,
+  closeSettings,
+  addEmojiToCanvas,
+  setEmojiUrl
+}) => {
 
   return (
-    <div className="text-tool">
-      <input
-        type="text"
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        placeholder="텍스트 입력"
-      />
-      <div className="text-settings">
-        <label>
-          글자 크기 (%):
+    <div className="tool-settings">
+      {selectedTool === 'pen' && (
+        <div className="pen-settings-picker">
           <input
-            type="number"
-            value={fontSize}
-            onChange={(e) => setFontSize(parseFloat(e.target.value))}
-            step="0.1"
-            min="0.1"
+            type="range"
+            min="1"
+            max="20"
+            value={toolSize}
+            onChange={(e) => setToolSize(Number(e.target.value))}
+            className="tool-size-slider"
           />
-        </label>
-        <label>
-          색상:
+          <div className="color-picker-container">
+            <label>색상</label>
+            <input
+              type="color"
+              value={selectedColor}
+              onChange={(e) => setSelectedColor(e.target.value)}
+            />
+          </div>
+          <button className="close-button" onClick={closeSettings}>
+            닫기
+          </button>
+        </div>
+      )}
+
+      {selectedTool === 'eraser' && (
+        <div className="eraser-settings-picker">
           <input
-            type="color"
-            value={color}
-            onChange={(e) => setColor(e.target.value)}
+            type="range"
+            min="1"
+            max="70"
+            value={eraserSize}
+            onChange={(e) => setEraserSize(Number(e.target.value))}
+            className="tool-size-slider"
           />
-        </label>
-        <label>
-          폰트:
-          <select
-            value={fontFamily}
-            onChange={(e) => setFontFamily(e.target.value)}
-          >
-            <option value="Arial">Arial</option>
-            <option value="Courier New">Courier New</option>
-            <option value="Georgia">Georgia</option>
-            <option value="Times New Roman">Times New Roman</option>
-            <option value="Verdana">Verdana</option>
-          </select>
-        </label>
-      </div>
-      <button onClick={handleAddText}>텍스트 추가</button>
+          <button className="close-button" onClick={closeSettings}>
+            닫기
+          </button>
+        </div>
+      )}
     </div>
   );
 };
 
-export default TextTool;
+export default ToolSettings;
