@@ -1,5 +1,5 @@
 import React from 'react';
-import 'assets/css/SidebarButton.css';
+import 'assets/css/SketchHome.css';
 
 const SidebarButton = ({ icon, label, onClick }) => {
   return (

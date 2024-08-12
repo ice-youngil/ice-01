@@ -7,7 +7,7 @@ import ShapeSelectionModal from 'services/threeD/ShapeSelectionModal';
 import ThreeDModal from 'services/threeD/ThreeDModel'; 
 
 // ======================= css ===============================
-import 'assets/css/SketchHome.css'; 
+import 'assets/css/SketchHome.css';
 
 // ====================== 아이콘 ==============================
 // Topbar
@@ -247,25 +247,32 @@ const SketchToolHome = () => {
           onHistoryChange={handleHistoryChange}
           activeTool={activeTool} // activeTool을 CanvasComponent에 전달
         />
-        <button className="undo-button" onClick={handleUndoClick}>
-          <img src={undoIcon} /> 
-        </button>
-        <button className="redo-button" onClick={handleRedoClick}>
-          <img src={redoIcon} /> 
-        </button>
+        <div className="control-button">
+          <button className="redo-button" onClick={handleRedoClick}>
+            <img src={redoIcon} /> 
+          </button>
+          <button className="undo-button" onClick={handleUndoClick}>
+            <img src={undoIcon} /> 
+          </button>
+        </div>
       </div>
       <div className="side-bar">
         <div className="side-function">
           <SidebarButton icon={textIcon} label="side-text" onClick={() => handleButtonClick('text')} /> 
           <SidebarButton icon={elementIcon} label="side-elements" onClick={() => handleButtonClick('emoji')} /> 
           <SidebarButton icon={penIcon} label="side-pen" onClick={() => handleButtonClick('pen')} />
-          <SidebarButton icon={handIcon} label="side-Hand" onClick={() => handleButtonClick('hand')} />
-          <SidebarButton icon={panningIcon} label="Panning" onClick={() => handleButtonClick('panning')} />
-          <SidebarButton icon={OutIcon} label="Zoom-out" onClick={() => handleZoom(false)}/>
-          <SidebarButton icon={InIcon} label="Zoom-in" onClick={() => handleZoom(true)}/>
+          <SidebarButton icon={handIcon} label="side-handdler" onClick={() => handleButtonClick('hand')} />
+          <SidebarButton icon={panningIcon} label="side-panning" onClick={() => handleButtonClick('panning')} />
+          <SidebarButton icon={OutIcon} label="side-zoom-out" onClick={() => handleZoom(false)}/>
+          <SidebarButton icon={InIcon} label="side-zoom-in" onClick={() => handleZoom(true)}/>
         </div>
-        <SidebarButton icon={threeDIcon} label="Apply 3D" onClick={handleApplyModel} /> 
+        <SidebarButton icon={threeDIcon} label="side-apply" onClick={handleApplyModel} /> 
       </div>
+      
+      <div>
+        
+      </div>
+
       {(selectedTool === 'pen') && showToolSettings && (
         <ToolSettings
           selectedTool={selectedTool}
@@ -273,7 +280,6 @@ const SketchToolHome = () => {
           setToolSize={setToolSize}
           selectedColor={selectedColor} 
           setSelectedColor={setSelectedColor} 
-          showEmojiPicker={showEmojiPicker}
           closeSettings={closeSettings} 
         />
       )}
@@ -294,6 +300,9 @@ const SketchToolHome = () => {
           onAddEmoji={handleSelectEmoji}
         />
       )}
+
+
+      
       <ShapeSelectionModal
         isOpen={isModalOpen} 
         onClose={handleCloseModal}
