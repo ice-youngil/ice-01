@@ -1,8 +1,10 @@
 import React, { useRef, useEffect, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { fabric } from 'fabric';
+
+// ======================= css ===============================
 import 'assets/css/SketchHome.css';
 
-const CanvasComponent2 = forwardRef(({
+const CanvasComponent = forwardRef(({
   selectedTool,
   toolSize,
   image,
@@ -172,4 +174,4 @@ const CanvasComponent2 = forwardRef(({
   );
 });
 
-export default CanvasComponent2;
+export default CanvasComponent;
