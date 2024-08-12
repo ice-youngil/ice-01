@@ -3,10 +3,9 @@ import 'assets/css/SidebarButton.css';
 
 const SidebarButton = ({ icon, label, onClick }) => {
   return (
-    <li className="sidebar-button" onClick={onClick}>
-      <img className="button-icon" src={icon} alt={label} />
-      <span className="button-label">{label}</span>
-    </li>
+    <button className={label} onClick={onClick}>
+      <img src={icon}></img>
+    </button>    
   );
 };
 

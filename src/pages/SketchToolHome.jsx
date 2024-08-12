@@ -1,196 +1,297 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import SidebarButton from 'components/SidebarButton';
-import CanvasComponent from './CanvasComponent';
-import ToolSettings from 'components/ToolSettings';
-import ShapeSelectionModal from 'services/threeD/ShapeSelectionModal'
-import 'assets/css/SketchToolHome.css';
+import React, { useState, useRef } from 'react'; 
+import SidebarButton from 'components/SidebarButton'; 
+import CanvasComponent from './CanvasComponent'; 
+import TextSettings from 'components/TextSettings'; 
+import ToolSettings from 'components/ToolSettings'; 
+import ShapeSelectionModal from 'services/threeD/ShapeSelectionModal'; 
+import ThreeDModal from 'services/threeD/ThreeDModel'; 
+import 'assets/css/SketchHome.css'; 
 
 // ====================== 아이콘 ==============================
-import textButtonIcon from 'assets/images/text.png';
-import eraserButtonIcon from 'assets/images/eraser.png';
-import elementButtonIcon from 'assets/images/element.png';
-import penButtonIcon from 'assets/images/pen.png';
-import designButtonIcon from 'assets/images/design.png';
-import backButtonIcon from 'assets/images/back.png';
-import handIcon from 'assets/images/hand.png';
 
-// ====================== 이미지 조작 라이브러리 ==============================
-import html2canvas from "html2canvas";
-import saveAs from "file-saver";
+// Topbar
+import homeIcon from 'assets/icon/home.png'; 
+import imageLoadButtoIcon from 'assets/icon/load.png';
+import imageSaveButtonIcon from 'assets/icon/save.png'; 
+
+// Sidebar
+import textIcon from 'assets/icon/text.png'; 
+import elementIcon from 'assets/icon/element.png'; 
+import penIcon from 'assets/icon/pen.png'; 
+import threeDIcon from 'assets/icon/apply.png'; 
+import undoIcon from 'assets/icon/undo.png'; 
+import redoIcon from 'assets/icon/redo.png'; 
+import handIcon from 'assets/icon/hand.png';
+import InIcon from 'assets/icon/plus.png';
+import OutIcon from 'assets/icon/minus.png';
+import panningIcon from 'assets/icon/panning.png'; // 패닝 아이콘
+
+import EmojiSettings from 'components/EmojiSettings'; 
 
 const SketchToolHome = () => {
-  
-  const navigate = useNavigate();
-  const canvasRef = useRef(null);
-  const [selectedTool, setSelectedTool] = useState('pen');
-  const [image, setImage] = useState(null);
-  const [history, setHistory] = useState([]);
-  const [currentStep, setCurrentStep] = useState(-1);
-  const [toolSize, setToolSize] = useState(5);
-  const [eraserSize, setEraserSize] = useState(10);
+  const canvasRef = useRef(null); 
+  const [selectedTool, setSelectedTool] = useState('pen'); 
+  const [image, setImage] = useState(null); 
+  const [toolSize, setToolSize] = useState(5); 
   const [selectedColor, setSelectedColor] = useState('#000000');
-  const [isModalOpen, setIsModalOpen] = useState(false); // 모달 상태
-  const [emoji, setEmoji] = useState(null);
-  const [textSettings, setTextSettings] = useState({
-    fontSize: 16,
-    color: '#000000',
-    fontFamily: 'Arial',
-  });
-  const [isAltPressed, setIsAltPressed] = useState(false);
-  const screenShotRef = useRef(null);
-  
-  // ====================== 이미지 업로드 및 삭제 ==============================
+  const [emojiUrl, setEmojiUrl] = useState(null); 
+  const [activeTool, setActiveTool] = useState(''); // 현재 활성화된 도구 상태 관리
+  // 선택 창 표시 관련
+  const [showTextTool, setShowTextTool] = useState(false); 
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false); 
+  const [showToolSettings, setShowToolSettings] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false); 
+  const [is3DModalOpen, setIs3DModalOpen] = useState(false);
+  const [selectedShape, setSelectedShape] = useState(null);
+  const screenShotRef = useRef(null); 
+  const [history, setHistory] = useState([]); 
+  const [redoHistory, setRedoHistory] = useState([]); 
+
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
-      const reader = new FileReader();
+      const reader = new FileReader(); 
       reader.onload = (e) => {
-        setImage(e.target.result);
-        saveHistory(e.target.result);
-        setToolSize(5);
+        if (canvasRef.current) {
+          canvasRef.current.clearCanvas();
+        }
+        const newImage = e.target.result;
+        setImage(newImage);
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(file); 
     }
   };
 
-  const handleSaveImage = async() => {
-    if (!screenShotRef.current) return;
-
-    try {
-      const div = screenShotRef.current;
-      const canvas = await html2canvas(div, { scale: 2 });
-      canvas.toBlob((blob) => {
-        if (blob !== null) {
-          saveAs(blob, "result.png");
-        }
-      });
-    } catch (error) {
-      console.error("Error converting div to image:", error);
-    }
-  };
-
-// ====================== 3D 모델링 적용 ==============================
-
-    const handleApplyModel = () => {
-      if (image) {
-        setIsModalOpen(true); // 모달 열기
+  const handleSaveImage = async () => {
+    if (canvasRef.current) {
+      const canvas = canvasRef.current.getCanvas();
+  
+      if (canvas) {
+        const dataURL = canvas.toDataURL({
+          format: 'png',
+          quality: 1,
+        });
+  
+        const link = document.createElement('a');
+        link.href = dataURL;
+        link.download = 'canvas_image.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
       } else {
-        alert('이미지를 먼저 업로드해주세요.');
+        console.error('Canvas object is not available');
       }
-    };
+    } else {
+      console.error('canvasRef.current is not available');
+    }
+  };
+
+  const handleZoom = (zoomIn) => {
+    if (canvasRef.current) {
+      const canvas = canvasRef.current.getCanvas();
+
+      if (canvas) {
+        const currentZoom = canvas.getZoom();
+        const zoomFactor = zoomIn ? 1.1 : 0.95;
+        const newZoom = currentZoom * zoomFactor;
+        canvas.setZoom(newZoom);
+      }
+    }
+  };
+
+  const handleUndoClick = () => {
+    if (history.length > 1) {
+      const previousHistory = history.slice(0, -1);
+      setRedoHistory((prevRedoHistory) => [...prevRedoHistory, history[history.length - 1]]);
+      setHistory(previousHistory);
+  
+      const lastState = previousHistory[previousHistory.length - 1];
+      if (canvasRef.current) {
+        const canvas = canvasRef.current.getCanvas();
+        canvas.loadFromJSON(lastState, () => {
+          canvas.getObjects('image').forEach((img) => {
+            img.set({
+              selectable: false,
+              evented: false,
+            });
+          });
+          canvas.renderAll();
+        });
+      }
+    }
+  };
+  
+  const handleRedoClick = () => {
+    if (redoHistory.length > 0) {
+      const lastRedoState = redoHistory[redoHistory.length - 1];
+      setRedoHistory(redoHistory.slice(0, -1));
+    
+      if (canvasRef.current) {
+        const canvas = canvasRef.current.getCanvas();
+        setHistory((prevHistory) => [...prevHistory, lastRedoState]);
+        canvas.loadFromJSON(lastRedoState, () => {
+          canvas.getObjects('image').forEach((img) => {
+            img.set({
+              selectable: false,
+              evented: false,
+            });
+          });
+          canvas.renderAll();
+        });
+      }
+    }
+  };
+
+  const handleApplyModel = () => {
+    if (image) {
+      setIsModalOpen(true); 
+    } else {
+      alert('이미지를 먼저 업로드해주세요.'); 
+    }
+  };
+
   const handleCloseModal = () => {
-      setIsModalOpen(false);
-    };
-
-    const handleSelectShape = (selectedShape) => {
-      setIsModalOpen(false);
-
-      navigate('/threeD-modeling', {
-        state: {
-          image: image, 
-          shape: selectedShape
-        }
-      });
-    };
-
-  const saveHistory = (image) => {
-    setHistory((prevHistory) => [...prevHistory.slice(0, currentStep + 1), image]);
-    setCurrentStep((prevStep) => prevStep + 1);
+    setIsModalOpen(false); 
+    setIs3DModalOpen(false); 
   };
 
-  const handleUndo = () => {
-    if (currentStep > 0) {
-      setCurrentStep((prevStep) => prevStep - 1);
-      setImage(history[currentStep - 1]);
+  const handleSelectShape = (shape) => {
+    setSelectedShape(shape); 
+    setIsModalOpen(false); 
+    setIs3DModalOpen(true);
+  };
+
+  const handleButtonClick = (tool) => {
+    setShowTextTool(false);
+    setShowEmojiPicker(false);
+    setShowToolSettings(false);
+
+    setActiveTool(tool);
+
+    if (tool === 'text') {
+      setSelectedTool('text'); 
+      setShowTextTool(true); 
+    } else {
+      setSelectedTool(tool); 
+
+      if (tool === 'emoji') {
+        setShowEmojiPicker(true); 
+      } else if (tool === 'pen') {
+        setShowToolSettings(true); 
+      }
     }
   };
 
-  const handleKeyDown = (event) => {
-    if (event.key === 'Alt') {
-      setIsAltPressed(true);
+  const closeSettings = () => {
+    setShowToolSettings(false); 
+    setShowTextTool(false); 
+    setShowEmojiPicker(false); 
+  };
+
+  const handleAddText = (textSettings) => {
+    if (canvasRef.current) {
+      canvasRef.current.addText(textSettings); 
+    }
+  };
+  
+  const handleSelectEmoji = (EmojiSettings) => {
+    if (canvasRef.current) {
+      canvasRef.current.addEmoji(EmojiSettings); 
     }
   };
 
-  const handleKeyUp = (event) => {
-    if (event.key === 'Alt') {
-      setIsAltPressed(false);
-    }
+  const handleHistoryChange = (newHistory) => {
+    setHistory((prevHistory) => [...prevHistory, newHistory]); 
   };
-
-  useEffect(() => {
-    const htmlTitle = document.querySelector('title');
-    htmlTitle.innerHTML = "영일도방 스케치 툴"
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-    };
-  }, []);
 
   return (
-    <div className="sketchtoolhome-container">
-      <div className="top-bar">
-        <button className="back-button" onClick={() => navigate('/')}>
-          <span>&lt;</span>
+    <div className="sketchtoolhome-container"> 
+      <div className="top-bar"> 
+        <button className="top-home">
+          <img src={homeIcon} alt="Home" /> 
         </button>
-        <button className="home-button">
-          <span>홈</span>
-        </button>
-        <div className="separator"></div>
-        <div className="load-sketch-button">
-          <label>
-            <span>스케치<br />불러오기</span>
-            <input type="file" onChange={handleImageUpload} />
-          </label>
+        <div className="top-function">
+          <button className="top-load" onClick={() => document.getElementById('fileupload').click()}>
+            <img src={imageLoadButtoIcon} alt="Load" />
+            <input 
+              id="fileupload" 
+              type="file" 
+              onChange={handleImageUpload} 
+              style={{ display: 'none' }} 
+            />
+          </button>
+          <button className="top-save" onClick={handleSaveImage}>
+            <img src={imageSaveButtonIcon} alt="Save" />
+          </button>
         </div>
-        <button className="save-button" onClick={handleSaveImage}>
-          저장하기
-        </button>
-        <button className="apply-button" onClick={handleApplyModel}>
-          적용하기
-        </button>
       </div>
-      <div 
-        ref={screenShotRef}>
+      <div ref={screenShotRef}>
         <CanvasComponent
+          ref={canvasRef} 
           selectedTool={selectedTool}
           toolSize={toolSize}
-          eraserSize={eraserSize}
-          image={image}
-          onSaveHistory={saveHistory}
-          isAltPressed={isAltPressed}
+          image={image} 
           selectedColor={selectedColor}
+          onHistoryChange={handleHistoryChange}
+          activeTool={activeTool} // activeTool을 CanvasComponent에 전달
         />
+        <button className="undo-button" onClick={handleUndoClick}>
+          <img src={undoIcon} /> 
+        </button>
+        <button className="redo-button" onClick={handleRedoClick}>
+          <img src={redoIcon} /> 
+        </button>
       </div>
-      <div className="sidebar-buttons">
-        <SidebarButton icon={textButtonIcon} label="텍스트" onClick={() => setSelectedTool('text')} />
-        <SidebarButton icon={eraserButtonIcon} label="지우개" onClick={() => setSelectedTool('eraser')} />
-        <SidebarButton icon={elementButtonIcon} label="요소" onClick={() => setSelectedTool('element')} />
-        <SidebarButton icon={penButtonIcon} label="펜" onClick={() => setSelectedTool('pen')} />
-        <SidebarButton icon={designButtonIcon} label="문패지정" onClick={() => setSelectedTool('design')} />
-        <SidebarButton icon={backButtonIcon} label="되돌리기" onClick={handleUndo} />
-        <SidebarButton icon={handIcon} onClick={() => setSelectedTool('hand')} />
+      <div className="side-bar">
+        <div className="side-function">
+          <SidebarButton icon={textIcon} label="side-text" onClick={() => handleButtonClick('text')} /> 
+          <SidebarButton icon={elementIcon} label="side-elements" onClick={() => handleButtonClick('emoji')} /> 
+          <SidebarButton icon={penIcon} label="side-pen" onClick={() => handleButtonClick('pen')} />
+          <SidebarButton icon={handIcon} label="side-Hand" onClick={() => handleButtonClick('hand')} />
+          <SidebarButton icon={panningIcon} label="Panning" onClick={() => handleButtonClick('panning')} />
+          <SidebarButton icon={OutIcon} label="Zoom-out" onClick={() => handleZoom(false)}/>
+          <SidebarButton icon={InIcon} label="Zoom-in" onClick={() => handleZoom(true)}/>
+        </div>
+        <SidebarButton icon={threeDIcon} label="Apply 3D" onClick={handleApplyModel} /> 
       </div>
-      <ToolSettings
-        selectedTool={selectedTool}
-        textSettings={textSettings}
-        handleTextSettingsChange={(key, value) => setTextSettings({ ...textSettings, [key]: value })}
-        handleTextSettingsApply={() => {}}
-        toolSize={toolSize}
-        setToolSize={setToolSize}
-        selectedColor={selectedColor}
-        setSelectedColor={setSelectedColor}
-        eraserSize={eraserSize}
-        setEraserSize={setEraserSize}
-        setEmoji={setEmoji}
-      />
+      {(selectedTool === 'pen') && showToolSettings && (
+        <ToolSettings
+          selectedTool={selectedTool}
+          toolSize={toolSize}
+          setToolSize={setToolSize}
+          selectedColor={selectedColor} 
+          setSelectedColor={setSelectedColor} 
+          showEmojiPicker={showEmojiPicker}
+          closeSettings={closeSettings} 
+        />
+      )}
+      {showTextTool && (
+        <div className="text-tool-container">
+          <TextSettings onAddText={handleAddText} /> 
+          <button className="cancel-button" onClick={closeSettings}>
+            닫기 
+          </button>
+        </div>
+      )}
+      {showEmojiPicker && (
+        <EmojiSettings
+          selectedTool="emoji"
+          showEmojiPicker={showEmojiPicker}
+          closeSettings={closeSettings} 
+          setEmojiUrl={setEmojiUrl}
+          onAddEmoji={handleSelectEmoji}
+        />
+      )}
       <ShapeSelectionModal
-        isOpen={isModalOpen}
+        isOpen={isModalOpen} 
         onClose={handleCloseModal}
         onSelectShape={handleSelectShape}
+      />
+      <ThreeDModal
+        isOpen={is3DModalOpen}
+        onClose={handleCloseModal} 
+        image={image}
+        shape={selectedShape} 
       />
     </div>
   );

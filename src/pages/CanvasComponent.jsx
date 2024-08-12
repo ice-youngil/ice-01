@@ -1,168 +1,175 @@
-import React, { useRef, useEffect, useState } from 'react';
-import 'assets/css/SketchToolHome.css';
+import React, { useRef, useEffect, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
+import { fabric } from 'fabric';
+import 'assets/css/SketchHome.css';
 
-const CanvasComponent = ({ selectedTool, toolSize, eraserSize, image, onSaveHistory, selectedColor, element }) => { // eraserSize 추가
-  const canvasRef = useRef(null); 
-  const drawingCanvasRef = useRef(null); 
-  const drawingContextRef = useRef(null);
-  const elementCanvasRef = useRef(null);  
-  const [isDrawing, setIsDrawing] = useState(false); 
-  const [isPanning, setIsPanning] = useState(false); 
-  const [startX, setStartX] = useState(0); 
-  const [startY, setStartY] = useState(0); 
-  const [offsetX, setOffsetX] = useState(0); 
-  const [offsetY, setOffsetY] = useState(0); 
-  const [scale, setScale] = useState(1); 
+const CanvasComponent2 = forwardRef(({
+  selectedTool,
+  toolSize,
+  image,
+  selectedColor,
+  onHistoryChange,
+}, ref) => {
+  const canvasRef = useRef(null);
+  const [canvas, setCanvas] = useState(null);
+
+  useImperativeHandle(ref, () => ({
+    clearCanvas: () => {
+      if (canvas) {
+        canvas.clear();
+        if (onHistoryChange) {
+          onHistoryChange([]); // 히스토리 초기화
+        }
+      }
+    },
+    addText: (textSettings) => {
+      if (canvas) {
+        const text = new fabric.Textbox(textSettings.text, {
+          left: textSettings.left || 50,
+          top: textSettings.top || 50,
+          fill: textSettings.color || 'black',
+          fontSize: textSettings.fontSize || 20,
+          fontFamily: textSettings.fontFamily || 'Arial',
+        });
+        canvas.add(text);
+        canvas.renderAll();
+        saveHistory();
+      }
+    },
+    addEmoji: (EmojiSettings) => {
+      if (canvas) {
+        fabric.Image.fromURL(EmojiSettings.url, (img) => {
+          canvas.add(img);
+          canvas.renderAll();
+          saveHistory();
+        });
+      }
+    },
+    getCanvas: () => canvas // canvas 객체 반환
+  }));
+
+  const saveHistory = useCallback(() => {
+    if (canvas && onHistoryChange) {
+      const json = canvas.toJSON();
+      onHistoryChange(json); // 히스토리 변경 사항을 부모 컴포넌트로 전달
+    }
+  }, [canvas, onHistoryChange]);
 
   useEffect(() => {
-    const drawingCanvas = drawingCanvasRef.current;
-    const drawingContext = drawingCanvas.getContext('2d');
-    drawingContext.lineCap = 'round';
-    drawingContextRef.current = drawingContext;
+    if (image) {
+      const imgElement = new Image();
+      imgElement.crossOrigin = 'anonymous'; // CORS 설정 추가
+      imgElement.src = image;
+      imgElement.onload = () => {
+        // 기존에 캔버스가 있고 DOM 요소가 존재하는지 확인 후 초기화
+        if (canvas && canvasRef.current) {
+          canvas.dispose();
+        }
 
+        const canvasInstance = new fabric.Canvas(canvasRef.current);
+        const imgInstance = new fabric.Image(imgElement, {
+          selectable: false,
+        });
+
+        const maxWidth = window.innerWidth * 0.8; // 최대 너비 (윈도우 크기의 80%)
+        const maxHeight = window.innerHeight * 0.8; // 최대 높이 (윈도우 크기의 80%)
+
+        const scaleFactor = Math.min(maxWidth / imgInstance.width, maxHeight / imgInstance.height);
+
+        canvasInstance.setWidth(imgInstance.width * scaleFactor);
+        canvasInstance.setHeight(imgInstance.height * scaleFactor);
+
+        imgInstance.scaleToWidth(canvasInstance.width);
+        imgInstance.scaleToHeight(canvasInstance.height);
+
+        canvasInstance.add(imgInstance);
+        canvasInstance.sendToBack(imgInstance);
+
+        setCanvas(canvasInstance);
+        saveHistory(); // 캔버스 초기화 후 히스토리 저장
+      };
+    }
+  }, [image]);
+
+  useEffect(() => {
+    if (canvas) {
+      // 이전 이벤트 핸들러 제거
+      canvas.off('mouse:down');
+      canvas.off('mouse:move');
+      canvas.off('mouse:up');
+
+      if (selectedTool === 'pen') {
+        canvas.isDrawingMode = true;
+        canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
+        canvas.freeDrawingBrush.width = toolSize;
+        canvas.freeDrawingBrush.color = selectedColor;
+      } else if (selectedTool === 'panning') {
+        // 패닝 기능 활성화
+        canvas.isDrawingMode = false;
+        canvas.selection = false;
+        canvas.defaultCursor = 'grab';
+
+        let panning = false;
+        const handleMouseDown = () => {
+          panning = true;
+          canvas.defaultCursor = 'grabbing';
+        };
+        const handleMouseMove = (event) => {
+          if (panning) {
+            const delta = new fabric.Point(event.e.movementX, event.e.movementY);
+            canvas.relativePan(delta);
+          }
+        };
+        const handleMouseUp = () => {
+          panning = false;
+          canvas.defaultCursor = 'grab';
+        };
+
+        canvas.on('mouse:down', handleMouseDown);
+        canvas.on('mouse:move', handleMouseMove);
+        canvas.on('mouse:up', handleMouseUp);
+      } else {
+        canvas.isDrawingMode = false;
+        canvas.selection = true;
+        canvas.defaultCursor = 'default';
+      }
+    }
+  }, [selectedTool, toolSize, selectedColor, canvas]);
+
+  useEffect(() => {
+    if (canvas) {
+      const saveOnEvent = () => saveHistory();
+
+      canvas.on('object:added', saveOnEvent);
+      canvas.on('object:modified', saveOnEvent);
+      canvas.on('path:created', saveOnEvent);
+
+      return () => {
+        canvas.off('object:added', saveOnEvent);
+        canvas.off('object:modified', saveOnEvent);
+        canvas.off('path:created', saveOnEvent);
+      };
+    }
+  }, [canvas, saveHistory]);
+
+  useEffect(() => {
     const canvasContainer = document.querySelector('.canvas-container');
 
-    if (image) {
+    if (image && canvasContainer) {
       canvasContainer.style.position = 'relative';
       canvasContainer.style.overflow = 'hidden';
       canvasContainer.style.display = 'flex';
       canvasContainer.style.alignItems = 'center';
       canvasContainer.style.justifyContent = 'center';
-    }
-
-    canvasContainer.addEventListener('wheel', handleWheel);
-    canvasContainer.addEventListener('mousedown', startPanning);
-    canvasContainer.addEventListener('mousemove', pan);
-    canvasContainer.addEventListener('mouseup', stopPanning);
-
-    return () => {
-      canvasContainer.removeEventListener('wheel', handleWheel);
-      canvasContainer.removeEventListener('mousedown', startPanning);
-      canvasContainer.removeEventListener('mousemove', pan);
-      canvasContainer.removeEventListener('mouseup', stopPanning);
-    };
-  }, [scale, toolSize, offsetX, offsetY, selectedTool, image]);
-
-  const handleWheel = (event) => {
-    if (event.altKey) { 
-      event.preventDefault();
-      const newScale = Math.min(Math.max(0.5, scale + event.deltaY * -0.001), 3);
-      setScale(newScale);
-      const canvas = canvasRef.current;
-      const drawingCanvas = drawingCanvasRef.current;
-      canvas.style.transform = `scale(${newScale}) translate(${offsetX}px, ${offsetY}px)`;
-      drawingCanvas.style.transform = `scale(${newScale}) translate(${offsetX}px, ${offsetY}px)`;
-    }
-  };
-
-  const startPanning = (event) => {
-    if (selectedTool === 'hand') {
-      setIsPanning(true);
-      setStartX(event.clientX - offsetX);
-      setStartY(event.clientY - offsetY);
-    }
-  };
-
-  const pan = (event) => {
-    if (isPanning) {
-      const dx = event.clientX - startX;
-      const dy = event.clientY - startY;
-      setOffsetX(dx);
-      setOffsetY(dy);
-      const canvas = canvasRef.current;
-      const drawingCanvas = drawingCanvasRef.current;
-      canvas.style.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
-      drawingCanvas.style.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
-    }
-  };
-
-  const stopPanning = () => {
-    setIsPanning(false);
-  };
-
-  const adjustCoordinates = (nativeEvent) => {
-    const canvas = drawingCanvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-    return {
-      offsetX: (nativeEvent.clientX - rect.left) * (canvas.width / rect.width),
-      offsetY: (nativeEvent.clientY - rect.top) * (canvas.height / rect.height),
-    };
-  };
-
-  const startDrawing = ({ nativeEvent }) => {
-    if (selectedTool !== 'hand') {
-      const { offsetX, offsetY } = adjustCoordinates(nativeEvent);
-      drawingContextRef.current.beginPath();
-      drawingContextRef.current.moveTo(offsetX, offsetY);
-      setIsDrawing(true);
-    }
-  };
-
-  const finishDrawing = () => {
-    if (selectedTool !== 'hand') {
-      drawingContextRef.current.closePath();
-      setIsDrawing(false);
-      onSaveHistory(drawingCanvasRef.current);
-    }
-  };
-
-  const draw = ({ nativeEvent }) => {
-    if (isDrawing && selectedTool !== 'hand') {
-      const { offsetX, offsetY } = adjustCoordinates(nativeEvent);
-      drawingContextRef.current.lineTo(offsetX, offsetY);
-      drawingContextRef.current.stroke();
-    }
-  };
-
-  useEffect(() => {
-    if (selectedTool === 'eraser') {
-      drawingContextRef.current.globalCompositeOperation = 'destination-out';
-      drawingContextRef.current.lineWidth = eraserSize; // 지우개 크기 적용
-    } else if (selectedTool === 'pen') {
-      drawingContextRef.current.globalCompositeOperation = 'source-over';
-      drawingContextRef.current.strokeStyle = selectedColor; // 펜 색상 적용
-      drawingContextRef.current.lineWidth = toolSize; // 펜 크기 적용
-    }
-  }, [selectedTool, toolSize, eraserSize, selectedColor]);
-
-  useEffect(()=> {
-    elementCanvasRef.current = element;
-  },[element]);
-
-  useEffect(() => {
-    if (image) {
-      const canvas = canvasRef.current;
-      const context = canvas.getContext('2d');
-      const img = new Image();
-      img.src = image;
-      img.onload = () => {
-        canvas.width = img.width;
-        canvas.height = img.height;
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        context.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-        const drawingCanvas = drawingCanvasRef.current;
-        drawingCanvas.width = img.width;
-        drawingCanvas.height = img.height;
-      };
+      canvasContainer.style.transformOrigin = 'center center';
     }
   }, [image]);
 
   return (
     <div className="canvas-container">
       <canvas ref={canvasRef} className={image ? 'active-canvas' : 'inactive-canvas'} />
-      <canvas
-        ref={drawingCanvasRef}
-        
-        onMouseDown={startDrawing}
-        onMouseUp={finishDrawing}
-        onMouseMove={draw}
-        className={image ? 'active-canvas' : 'inactive-canvas'}
-      />
-      
       {!image && <div className="placeholder">이미지를 불러와 주세요</div>}
-  </div>
+    </div>
   );
-};
+});
 
-export default CanvasComponent;
+export default CanvasComponent2;
