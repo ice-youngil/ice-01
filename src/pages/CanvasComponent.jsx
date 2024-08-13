@@ -157,17 +157,16 @@ const CanvasComponent = forwardRef(({
     const canvasContainer = document.querySelector('.canvas-container');
 
     if (image && canvasContainer) {
-      canvasContainer.style.position = 'relative';
-      canvasContainer.style.overflow = 'hidden';
-      canvasContainer.style.display = 'flex';
-      canvasContainer.style.alignItems = 'center';
-      canvasContainer.style.justifyContent = 'center';
-      canvasContainer.style.transformOrigin = 'center center';
+      // canvasContainer.style.overflow = 'hidden';
+      // canvasContainer.style.display = 'flex';
+      // canvasContainer.style.alignItems = 'center';
+      // canvasContainer.style.justifyContent = 'center';
+      // canvasContainer.style.transformOrigin = 'center center';
     }
   }, [image]);
 
   return (
-    <div className="canvas-container">
+    <div className="canvas-window">
       <canvas ref={canvasRef} className={image ? 'active-canvas' : 'inactive-canvas'} />
       {!image && <div className="placeholder">이미지를 불러와 주세요</div>}
     </div>

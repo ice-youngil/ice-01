@@ -21,7 +21,6 @@ const PenSettings = ({
         className="tool-size-slider"
       />
       <div className="color-picker-container">
-        <label>색상</label>
         <input
           type="color"
           value={selectedColor}

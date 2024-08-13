@@ -263,8 +263,8 @@ const SketchToolHome = () => {
           <SidebarButton icon={textIcon} label="side-text" onClick={() => handleButtonClick('text')} /> 
           <SidebarButton icon={elementIcon} label="side-elements" onClick={() => handleButtonClick('emoji')} /> 
           <SidebarButton icon={penIcon} label="side-pen" onClick={() => handleButtonClick('pen')} />
-          <SidebarButton icon={handIcon} label="side-handdler" onClick={() => handleButtonClick('hand')} />
-          <SidebarButton icon={panningIcon} label="side-panning" onClick={() => handleButtonClick('panning')} />
+          <SidebarButton icon={handIcon} label="side-handdler" onClick={() => setSelectedTool('hand')} />
+          <SidebarButton icon={panningIcon} label="side-panning" onClick={() => setSelectedTool('panning')} />
           <SidebarButton icon={OutIcon} label="side-zoom-out" onClick={() => handleZoom(false)}/>
           <SidebarButton icon={InIcon} label="side-zoom-in" onClick={() => handleZoom(true)}/>
         </div>
@@ -295,7 +295,10 @@ const SketchToolHome = () => {
             closeSettings={closeSettings}
           />
         )}
+        
       </div>  }
+
+      
 
       <ShapeSelectionModal
         isOpen={isModalOpen} 

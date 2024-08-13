@@ -1,12 +1,85 @@
-/*화면 컨테이너 영역*/
-/* .text-tool-container, .emoji-settings, .tool-settings {
-  
-} */
+.wrapper {
+  background-color: #81b29a;
+  border-radius: 50px;
+  border-style: solid;
+  border-color: #3d405b;
+}
 
 @media only screen and (max-width: 1000px) {
   .wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 75vw;
+    min-height: 50vh;
     z-index: 3;
     position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  /* 텍스트 css 영역*/
+  .text-settings {
+    min-width: 50%;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    gap: 6rem;
+  }
+
+  #text-input {
+    width: 75%;
+    margin: auto;
+  }
+
+  .text-select {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  #text-px, .text-font {
+    width: 100px;
+  }
+
+  .text-button {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .text-apply, .close-button {
+    background-color: #e07a5f;
+    border: none;
+    border-radius: 5px;
+    border-style: solid;
+    border-color: #3d405b;
+    border-width: medium;
+    color: white;
+    font-size: 1rem;
+  }
+
+  /* 이모지 css 영역 */
+  .emoji-settings {
+    min-width: 50%;
+    min-height: 75%;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  /*  */
+  .pen-settings {
+    min-width: 50%;
+    min-height: 50%;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    gap: 6rem;
+    align-items: center;
   }
 }
 
