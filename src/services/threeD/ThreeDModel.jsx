@@ -20,6 +20,7 @@ const ThreeDModal = ({ isOpen, onClose, image, shape }) => {
         renderer.setClearColor(0xffffff, 1);
         const canvas = renderer.domElement;
         canvasRef.current = canvas;
+
         container.appendChild(canvas);
 
         camera.position.z = 5;

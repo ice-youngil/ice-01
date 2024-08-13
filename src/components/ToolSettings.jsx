@@ -3,39 +3,34 @@ import React from 'react';
 import 'assets/css/ToolSettings.css';
 
 const ToolSettings = ({
-  selectedTool,
   toolSize,
   setToolSize,
   selectedColor,
   setSelectedColor,
-  closeSettings,
+  closeSettings
 }) => {
 
   return (
-    <div className="tool-settings">
-      {selectedTool === 'pen' && (
-        <div className="pen-settings-picker">
-          <input
-            type="range"
-            min="1"
-            max="20"
-            value={toolSize}
-            onChange={(e) => setToolSize(Number(e.target.value))}
-            className="tool-size-slider"
-          />
-          <div className="color-picker-container">
-            <label>색상</label>
-            <input
-              type="color"
-              value={selectedColor}
-              onChange={(e) => setSelectedColor(e.target.value)}
-            />
-          </div>
-          <button className="close-button" onClick={closeSettings}>
-            닫기
-          </button>
-        </div>
-      )}
+    <div className="pen-settings">
+      <input
+        type="range"
+        min="1"
+        max="20"
+        value={toolSize}
+        onChange={(e) => setToolSize(Number(e.target.value))}
+        className="tool-size-slider"
+      />
+      <div className="color-picker-container">
+        <label>색상</label>
+        <input
+          type="color"
+          value={selectedColor}
+          onChange={(e) => setSelectedColor(e.target.value)}
+        />
+      </div>
+      <button className="close-button" onClick={closeSettings}>
+        닫기
+      </button>
     </div>
   );
 };

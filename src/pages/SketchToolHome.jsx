@@ -7,8 +7,8 @@ import ShapeSelectionModal from 'services/threeD/ShapeSelectionModal';
 import ThreeDModal from 'services/threeD/ThreeDModel'; 
 
 // ======================= css ===============================
-import 'assets/css/SketchHome.css'; 
-
+import 'assets/css/SketchHome.css';
+import 'assets/css/ToolSettings.css'
 // ====================== 아이콘 ==============================
 // Topbar
 import homeIcon from 'assets/icon/home.png'; 
@@ -31,7 +31,7 @@ import EmojiSettings from 'components/EmojiSettings';
 
 const SketchToolHome = () => {
   const canvasRef = useRef(null); 
-  const [selectedTool, setSelectedTool] = useState('pen'); 
+  const [selectedTool, setSelectedTool] = useState(null); 
   const [image, setImage] = useState(null); 
   const [toolSize, setToolSize] = useState(5); 
   const [selectedColor, setSelectedColor] = useState('#000000');
@@ -247,53 +247,57 @@ const SketchToolHome = () => {
           onHistoryChange={handleHistoryChange}
           activeTool={activeTool} // activeTool을 CanvasComponent에 전달
         />
-        <button className="undo-button" onClick={handleUndoClick}>
-          <img src={undoIcon} /> 
-        </button>
-        <button className="redo-button" onClick={handleRedoClick}>
-          <img src={redoIcon} /> 
-        </button>
+        <div className="control-button">
+          <button className="redo-button" onClick={handleRedoClick}>
+            <img src={redoIcon} /> 
+          </button>
+          <button className="undo-button" onClick={handleUndoClick}>
+            <img src={undoIcon} /> 
+          </button>
+        </div>
       </div>
       <div className="side-bar">
         <div className="side-function">
           <SidebarButton icon={textIcon} label="side-text" onClick={() => handleButtonClick('text')} /> 
           <SidebarButton icon={elementIcon} label="side-elements" onClick={() => handleButtonClick('emoji')} /> 
           <SidebarButton icon={penIcon} label="side-pen" onClick={() => handleButtonClick('pen')} />
-          <SidebarButton icon={handIcon} label="side-Hand" onClick={() => handleButtonClick('hand')} />
-          <SidebarButton icon={panningIcon} label="Panning" onClick={() => handleButtonClick('panning')} />
-          <SidebarButton icon={OutIcon} label="Zoom-out" onClick={() => handleZoom(false)}/>
-          <SidebarButton icon={InIcon} label="Zoom-in" onClick={() => handleZoom(true)}/>
+          <SidebarButton icon={handIcon} label="side-handdler" onClick={() => handleButtonClick('hand')} />
+          <SidebarButton icon={panningIcon} label="side-panning" onClick={() => handleButtonClick('panning')} />
+          <SidebarButton icon={OutIcon} label="side-zoom-out" onClick={() => handleZoom(false)}/>
+          <SidebarButton icon={InIcon} label="side-zoom-in" onClick={() => handleZoom(true)}/>
         </div>
-        <SidebarButton icon={threeDIcon} label="Apply 3D" onClick={handleApplyModel} /> 
+        <SidebarButton icon={threeDIcon} label="side-apply" onClick={handleApplyModel} /> 
       </div>
-      {(selectedTool === 'pen') && showToolSettings && (
-        <ToolSettings
-          selectedTool={selectedTool}
-          toolSize={toolSize}
-          setToolSize={setToolSize}
-          selectedColor={selectedColor} 
-          setSelectedColor={setSelectedColor} 
-          showEmojiPicker={showEmojiPicker}
-          closeSettings={closeSettings} 
-        />
-      )}
-      {showTextTool && (
-        <div className="text-tool-container">
-          <TextSettings onAddText={handleAddText} /> 
-          <button className="cancel-button" onClick={closeSettings}>
-            닫기 
-          </button>
-        </div>
-      )}
-      {showEmojiPicker && (
-        <EmojiSettings
-          selectedTool="emoji"
-          showEmojiPicker={showEmojiPicker}
-          closeSettings={closeSettings} 
-          setEmojiUrl={setEmojiUrl}
-          onAddEmoji={handleSelectEmoji}
-        />
-      )}
+      
+
+      <div className = "wrapper">
+        {(selectedTool === 'pen') && showToolSettings && (
+          <ToolSettings
+            toolSize={toolSize}
+            setToolSize={setToolSize}
+            selectedColor={selectedColor} 
+            setSelectedColor={setSelectedColor}
+            closeSettings={closeSettings}
+          />
+        )}
+        {(selectedTool === 'text') && showTextTool && (
+          <TextSettings 
+            onAddText={handleAddText}
+            closeSettings={closeSettings}
+          />
+        )}
+        {(selectedTool === 'emoji') && showEmojiPicker && (
+          <EmojiSettings
+            setEmojiUrl={setEmojiUrl}
+            onAddEmoji={handleSelectEmoji}
+            closeSettings={closeSettings}
+          />
+        )}
+
+      </div>
+
+
+
       <ShapeSelectionModal
         isOpen={isModalOpen} 
         onClose={handleCloseModal}
