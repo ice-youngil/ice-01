@@ -138,7 +138,7 @@ const ThreeDModal = ({ isOpen, onClose, image, shape }) => {
         if (imageBlob) {
             saveAs(imageBlob, 'result.png');
         }
-    };
+      };
 
     return (
         <div className={`modal ${isOpen ? 'open' : 'closed'}`}>
