@@ -71,7 +71,7 @@
     align-items: center;
   }
 
-  /*  */
+  /* 펜 css 영역 */
   .pen-settings {
     min-width: 50%;
     min-height: 50%;
@@ -83,6 +83,81 @@
   }
 }
 
+/*웹 환경 수정 좀 해야됨.*/
 @media only screen and (min-width: 1001px) {
-  
+  .wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 30vw;
+    min-height: 50vh;
+    z-index: 3;
+    position: fixed;
+    top: 6%;
+    left: 7%;
+    border-radius: 0;
+  }
+
+  /* 텍스트 css 영역 */
+  .text-settings {
+    min-width: 50%;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    gap: 6rem;
+  }
+
+  #text-input {
+    width: 75%;
+    margin: auto;
+  }
+
+  .text-select {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  #text-px, .text-font {
+    width: 100px;
+  }
+
+  .text-button {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .text-apply, .close-button {
+    background-color: #e07a5f;
+    border: none;
+    border-radius: 5px;
+    border-style: solid;
+    border-color: #3d405b;
+    border-width: medium;
+    color: white;
+    font-size: 1rem;
+  }
+
+  /* 이모지 css 영역 */
+  .emoji-settings {
+    min-width: 50%;
+    min-height: 75%;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  /* 펜 css 영역 */
+  .pen-settings {
+    min-width: 50%;
+    min-height: 50%;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    gap: 6rem;
+    align-items: center;
+  }
 }
