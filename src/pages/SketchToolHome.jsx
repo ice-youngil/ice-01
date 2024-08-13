@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import SidebarButton from 'components/SidebarButton'; 
 import CanvasComponent from './CanvasComponent'; 
 import TextSettings from 'components/TextSettings'; 
-import ToolSettings from 'components/ToolSettings'; 
+import PenSettings from 'components/PenSettings'; 
 import ShapeSelectionModal from 'services/threeD/ShapeSelectionModal'; 
 import ThreeDModal from 'services/threeD/ThreeDModel'; 
 
@@ -36,11 +36,10 @@ const SketchToolHome = () => {
   const [toolSize, setToolSize] = useState(5); 
   const [selectedColor, setSelectedColor] = useState('#000000');
   const [emojiUrl, setEmojiUrl] = useState(null); 
-  const [activeTool, setActiveTool] = useState(''); // 현재 활성화된 도구 상태 관리
   // 선택 창 표시 관련
   const [showTextTool, setShowTextTool] = useState(false); 
   const [showEmojiPicker, setShowEmojiPicker] = useState(false); 
-  const [showToolSettings, setShowToolSettings] = useState(false);
+  const [showPenSettings, setShowPenSettings] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false); 
   const [is3DModalOpen, setIs3DModalOpen] = useState(false);
   const [selectedShape, setSelectedShape] = useState(null);
@@ -48,6 +47,7 @@ const SketchToolHome = () => {
   const [history, setHistory] = useState([]); 
   const [redoHistory, setRedoHistory] = useState([]); 
   const [imageUrl, setImageUrl] = useState(null);
+  const [isWrapperOpen, setIsWrapperOpen] = useState(false);
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
@@ -174,28 +174,30 @@ const SketchToolHome = () => {
   };
 
   const handleButtonClick = (tool) => {
+    
+    setIsWrapperOpen(true);
+
     setShowTextTool(false);
     setShowEmojiPicker(false);
-    setShowToolSettings(false);
+    setShowPenSettings(false);
 
-    setActiveTool(tool);
-
+    setSelectedTool(tool); 
     if (tool === 'text') {
-      setSelectedTool('text'); 
       setShowTextTool(true); 
-    } else {
-      setSelectedTool(tool); 
-
-      if (tool === 'emoji') {
-        setShowEmojiPicker(true); 
-      } else if (tool === 'pen') {
-        setShowToolSettings(true); 
-      }
+    } 
+    else if (tool === 'emoji') {
+      setShowEmojiPicker(true); 
     }
-  };
+    else if (tool === 'pen') {
+      setShowPenSettings(true); 
+    }
+    
+    }
+
 
   const closeSettings = () => {
-    setShowToolSettings(false); 
+    setIsWrapperOpen(false);
+    setShowPenSettings(false); 
     setShowTextTool(false); 
     setShowEmojiPicker(false); 
   };
@@ -245,7 +247,7 @@ const SketchToolHome = () => {
           image={image} 
           selectedColor={selectedColor}
           onHistoryChange={handleHistoryChange}
-          activeTool={activeTool} // activeTool을 CanvasComponent에 전달
+          activeTool={selectedTool} // activeTool을 CanvasComponent에 전달
         />
         <div className="control-button">
           <button className="redo-button" onClick={handleRedoClick}>
@@ -270,9 +272,9 @@ const SketchToolHome = () => {
       </div>
       
 
-      <div className = "wrapper">
-        {(selectedTool === 'pen') && showToolSettings && (
-          <ToolSettings
+      {isWrapperOpen && <div className = "wrapper">
+        {showPenSettings && (
+          <PenSettings
             toolSize={toolSize}
             setToolSize={setToolSize}
             selectedColor={selectedColor} 
@@ -280,23 +282,20 @@ const SketchToolHome = () => {
             closeSettings={closeSettings}
           />
         )}
-        {(selectedTool === 'text') && showTextTool && (
+        {showTextTool && (
           <TextSettings 
             onAddText={handleAddText}
             closeSettings={closeSettings}
           />
         )}
-        {(selectedTool === 'emoji') && showEmojiPicker && (
+        {showEmojiPicker && (
           <EmojiSettings
             setEmojiUrl={setEmojiUrl}
             onAddEmoji={handleSelectEmoji}
             closeSettings={closeSettings}
           />
         )}
-
-      </div>
-
-
+      </div>  }
 
       <ShapeSelectionModal
         isOpen={isModalOpen} 

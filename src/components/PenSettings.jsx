@@ -2,7 +2,7 @@
 import React from 'react';
 import 'assets/css/ToolSettings.css';
 
-const ToolSettings = ({
+const PenSettings = ({
   toolSize,
   setToolSize,
   selectedColor,
@@ -35,4 +35,4 @@ const ToolSettings = ({
   );
 };
 
-export default ToolSettings;
+export default PenSettings;
