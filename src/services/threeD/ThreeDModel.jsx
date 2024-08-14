@@ -17,10 +17,10 @@ const ThreeDModal = ({ isOpen, onClose, image, shape }) => {
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer();
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setClearColor(0xffffff, 1);
+        renderer.setClearColor(0xf4f1de, 1);
         const canvas = renderer.domElement;
         canvasRef.current = canvas;
-
+        canvas.className="threeD-canvas";
         container.appendChild(canvas);
 
         camera.position.z = 5;
@@ -130,7 +130,7 @@ const ThreeDModal = ({ isOpen, onClose, image, shape }) => {
 
         return () => {
             container.removeChild(canvas);
-            renderer.dispose();
+            renderer.dispose(); 
         };
     }, [isOpen, image, shape]);
 
@@ -138,13 +138,13 @@ const ThreeDModal = ({ isOpen, onClose, image, shape }) => {
         if (imageBlob) {
             saveAs(imageBlob, 'result.png');
         }
-      };
+    };
 
     return (
-        <div className={`modal ${isOpen ? 'open' : 'closed'}`}>
+        <div className={`modal-${isOpen ? 'overlay' : 'closed'}`}>
             <div className="modal-content" ref={containerRef}>
-                <button className="ThreeD-save-button" onClick={handleSaveImage}>저장하기</button>
-                <button className="ThreeD-close-button" onClick={onClose}>닫기</button>
+                <button className="threeD-save-button" onClick={handleSaveImage}>저장하기</button>
+                <button className="threeD-close-button" onClick={onClose}>닫기</button>
             </div>
         </div>
     );

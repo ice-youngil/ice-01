@@ -13,13 +13,13 @@ const EmojiSettings = ({
     setEmojiUrl(emojiObject.imageUrl)
     onAddEmoji({
       url: emojiObject.imageUrl
-    }, {crossOrigin : "anonymous"})
+    })
   };
 
   return (
     <div className="emoji-settings">
       <Picker onEmojiClick={handleSelectEmoji} theme="auto"/>
-      <button className="close-button" onClick={closeSettings}>
+      <button className="emoji-close" onClick={closeSettings}>
         닫기
       </button>
     </div>

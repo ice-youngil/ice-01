@@ -1,7 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { fabric } from 'fabric';
 
-// ======================= css ===============================
 import 'assets/css/SketchHome.css';
 
 const CanvasComponent = forwardRef(({
@@ -45,34 +44,34 @@ const CanvasComponent = forwardRef(({
           canvas.add(img);
           canvas.renderAll();
           saveHistory();
-        }, { crossOrigin: 'anonymous' });
+        });
       }
     },
     getCanvas: () => canvas, // canvas 객체 반환
     handleZoom: (zoomIn) => {
-        if (canvas) {
-          const zoomFactor = zoomIn ? 1.1 : 0.95;
-          const currentZoom = canvas.getZoom();
-          const newZoom = currentZoom * zoomFactor;
-  
-          // 캔버스 중심을 기준으로 좌표 변환 적용
-          const canvasCenter = new fabric.Point(canvasWidth / 2, canvasHeight / 2);
-  
-          // 현재 캔버스의 중심점 좌표 계산
-          const centerPointBeforeZoom = fabric.util.transformPoint(canvasCenter, canvas.viewportTransform);
-  
-          // 새로운 줌 레벨로 확대/축소 적용
-          canvas.zoomToPoint(centerPointBeforeZoom, newZoom);
-  
-          // 줌 이후 중심점 좌표를 다시 계산
-          const centerPointAfterZoom = fabric.util.transformPoint(canvasCenter, canvas.viewportTransform);
-  
-          // 중심이 유지되도록 이동
-          const panX = centerPointBeforeZoom.x - centerPointAfterZoom.x;
-          const panY = centerPointBeforeZoom.y - centerPointAfterZoom.y;
-          canvas.relativePan(new fabric.Point(panX, panY));
-        }
+      if (canvas) {
+        const zoomFactor = zoomIn ? 1.1 : 0.95;
+        const currentZoom = canvas.getZoom();
+        const newZoom = currentZoom * zoomFactor;
+
+        // 캔버스 중심을 기준으로 좌표 변환 적용
+        const canvasCenter = new fabric.Point(canvasWidth / 2, canvasHeight / 2);
+
+        // 현재 캔버스의 중심점 좌표 계산
+        const centerPointBeforeZoom = fabric.util.transformPoint(canvasCenter, canvas.viewportTransform);
+
+        // 새로운 줌 레벨로 확대/축소 적용
+        canvas.zoomToPoint(centerPointBeforeZoom, newZoom);
+
+        // 줌 이후 중심점 좌표를 다시 계산
+        const centerPointAfterZoom = fabric.util.transformPoint(canvasCenter, canvas.viewportTransform);
+
+        // 중심이 유지되도록 이동
+        const panX = centerPointBeforeZoom.x - centerPointAfterZoom.x;
+        const panY = centerPointBeforeZoom.y - centerPointAfterZoom.y;
+        canvas.relativePan(new fabric.Point(panX, panY));
       }
+    }
   }));
 
   const saveHistory = useCallback(() => {
@@ -131,9 +130,6 @@ const CanvasComponent = forwardRef(({
       canvas.off('mouse:down');
       canvas.off('mouse:move');
       canvas.off('mouse:up');
-      canvas.off('touch:down');
-      canvas.off('touch:move');
-      canvas.off('touch:up');
 
       if (selectedTool === 'pen') {
         canvas.isDrawingMode = true;
@@ -147,57 +143,24 @@ const CanvasComponent = forwardRef(({
         canvas.defaultCursor = 'grab';
 
         let panning = false;
-        let startX = 0;
-        let startY = 0;
-
-        const handlePanStart = (event) => {
+        const handleMouseDown = () => {
           panning = true;
           canvas.defaultCursor = 'grabbing';
-          if (event.e.touches) {
-            // 터치 이벤트 처리
-            startX = event.e.touches[0].clientX;
-            startY = event.e.touches[0].clientY;
-          } else {
-            // 마우스 이벤트 처리
-            startX = event.e.clientX;
-            startY = event.e.clientY;
-          }
         };
-
-        const handlePanMove = (event) => {
+        const handleMouseMove = (event) => {
           if (panning) {
-            let deltaX, deltaY;
-            if (event.e.touches) {
-              // 터치 이벤트 처리
-              deltaX = event.e.touches[0].clientX - startX;
-              deltaY = event.e.touches[0].clientY - startY;
-              startX = event.e.touches[0].clientX;
-              startY = event.e.touches[0].clientY;
-            } else {
-              // 마우스 이벤트 처리
-              deltaX = event.e.clientX - startX;
-              deltaY = event.e.clientY - startY;
-              startX = event.e.clientX;
-              startY = event.e.clientY;
-            }
-            const delta = new fabric.Point(deltaX, deltaY);
+            const delta = new fabric.Point(event.e.movementX, event.e.movementY);
             canvas.relativePan(delta);
           }
         };
-
-        const handlePanEnd = () => {
+        const handleMouseUp = () => {
           panning = false;
           canvas.defaultCursor = 'grab';
         };
 
-        canvas.on('mouse:down', handlePanStart);
-        canvas.on('mouse:move', handlePanMove);
-        canvas.on('mouse:up', handlePanEnd);
-
-        // Mobile touch events
-        canvas.on('touch:down', handlePanStart);
-        canvas.on('touch:move', handlePanMove);
-        canvas.on('touch:up', handlePanEnd);
+        canvas.on('mouse:down', handleMouseDown);
+        canvas.on('mouse:move', handleMouseMove);
+        canvas.on('mouse:up', handleMouseUp);
       } else {
         canvas.isDrawingMode = false;
         canvas.selection = true;
@@ -224,7 +187,7 @@ const CanvasComponent = forwardRef(({
 
   useEffect(() => {
     const canvasContainer = document.querySelector('.canvas-container');
-
+    console.log(document.querySelector('.upper-canvas'));
     if (image && canvasContainer) {
       // canvasContainer.style.overflow = 'hidden';
       // canvasContainer.style.display = 'flex';

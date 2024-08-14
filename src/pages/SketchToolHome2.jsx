@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react'; 
 import SidebarButton from 'components/SidebarButton'; 
-import CanvasComponent from './CanvasComponent'; 
+import CanvasComponent from './CanvasComponent2'; 
 import TextSettings from 'components/TextSettings'; 
 import PenSettings from 'components/PenSettings'; 
 import ShapeSelectionModal from 'services/threeD/ShapeSelectionModal'; 
@@ -43,11 +43,13 @@ const SketchToolHome = () => {
   const [isModalOpen, setIsModalOpen] = useState(false); 
   const [is3DModalOpen, setIs3DModalOpen] = useState(false);
   const [selectedShape, setSelectedShape] = useState(null);
-  const screenShotRef = useRef(null); 
   const [history, setHistory] = useState([]); 
   const [redoHistory, setRedoHistory] = useState([]); 
   const [imageUrl, setImageUrl] = useState(null);
   const [isWrapperOpen, setIsWrapperOpen] = useState(false);
+
+  const [isUsedUndo, setIsUsedUndo] = useState(false);
+  const [isEvent, setIsEvent] = useState(false);
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
@@ -87,29 +89,51 @@ const SketchToolHome = () => {
       console.error('canvasRef.current is not available');
     }
   };
-  
- // handleZoom의 기능은 CanvasComponent로 옮김.
+
   const handleZoom = (zoomIn) => {
     if (canvasRef.current) {
-      canvasRef.current.handleZoom(zoomIn);
+      const canvas = canvasRef.current.getCanvas();
+
+      if (canvas) {
+        const currentZoom = canvas.getZoom();
+        const zoomFactor = zoomIn ? 1.1 : 0.95;
+        const newZoom = currentZoom * zoomFactor;
+        canvas.setZoom(newZoom);
+      }
     }
   };
+
   const handleHistoryChange = (newHistory) => {
-    setHistory((prevHistory) => [...prevHistory, newHistory]); // history에 새 상태 추가
-    // setRedoHistory([]); // 새로운 작업이 발생하면 redoHistory 초기화
+
+    console.log("new history ", newHistory);
+    console.log("setIsUsedUndo", isUsedUndo);
+    console.log("setIsEvent", isEvent)
+    // 이전 history 배열에 새로운 history 상태를 추가하여 history 상태를 업데이트합니다.
+    setHistory((prevHistory) => [...prevHistory, newHistory]);
+    
+    if(isUsedUndo && isEvent) {
+      setRedoHistory([]);
+      console.log('RedoHistory가 초기화되었습니다.');
+      setIsUsedUndo(false);
+      setIsEvent(false);
+    }
+    // RedoHistory 배열을 초기화합니다.
+    // setRedoHistory([]); if설정이 안되니까 계속 초기화가
+    // RedoHistory가 초기화되었음을 알리는 메시지 출력
   };
   
-  const handleUndoClick = () => {
-    if (history.length > 0) {
-      const currentState = history[history.length - 1]; // history의 마지막 상태 가져오기
-      setRedoHistory((prevRedoHistory) => [...prevRedoHistory, currentState]); // 현재 상태를 redoHistory에 추가
-      const newHistory = history.slice(0, -1); // history에서 마지막 상태 제거
-      setHistory(newHistory); // history 업데이트
   
-      const lastState = newHistory[newHistory.length - 1];
-      if (canvasRef.current && lastState) {
-        const canvas = canvasRef.current.getCanvas();
-        canvas.loadFromJSON(lastState, () => {
+  const handleUndoClick = () => {
+    if (history.length > 1) {
+      const previousHistory = history.slice(0, -1); // 배열의 마지막을 잘라낸다
+      const lastState = previousHistory[previousHistory.length - 1]; // previousHistory의 마지막 상태를 가져온다
+  
+      setHistory(previousHistory); // previousHistory로 history 업데이트
+      setRedoHistory((prevRedoHistory) => [...prevRedoHistory, history[history.length - 1]]); // 이전 history의 마지막 상태를 RedoHistory에 추가
+  
+      if (canvasRef.current) {
+        const canvas = canvasRef.current.getCanvas(); // 캔버스에서 객체 가져오기
+        canvas.loadFromJSON(lastState, () => { //
           canvas.getObjects('image').forEach((img) => {
             img.set({
               selectable: false,
@@ -119,29 +143,33 @@ const SketchToolHome = () => {
           canvas.renderAll();
         });
       }
+      setIsUsedUndo(true);
     }
   };
+  
+  
   
   const handleRedoClick = () => {
     if (redoHistory.length > 0) {
-      const redoState = redoHistory[redoHistory.length - 1]; // redoHistory의 마지막 상태 가져오기
-      setRedoHistory(redoHistory.slice(0, -1)); // redoHistory에서 마지막 상태 제거
-      setHistory((prevHistory) => [...prevHistory, redoState]); // redo 상태를 history에 추가
+      const latestRedo = redoHistory[redoHistory.length - 1]; // redoHistory의 마지막 상태를 가져옴
+      setRedoHistory(redoHistory.slice(0, -1)); // redoHistory의 마지막 상태를 제거
+      setHistory((prevHistory) => [...prevHistory, latestRedo]); // history에 latestRedo 상태를 추가
   
-      if (canvasRef.current) {
+      if (canvasRef.current) {  // 만약 캔버스를 다시 로드해야 한다면
         const canvas = canvasRef.current.getCanvas();
-        canvas.loadFromJSON(redoState, () => {
+        canvas.loadFromJSON(latestRedo, () => {
           canvas.getObjects('image').forEach((img) => {
             img.set({
               selectable: false,
               evented: false,
             });
           });
-          canvas.renderAll();
+          canvas.renderAll();  // 캔버스 다시 렌더링
         });
       }
     }
   };
+  
   const handleApplyModel = () => {
     if (canvasRef.current) {
       const canvas = canvasRef.current.getCanvas();
@@ -213,6 +241,7 @@ const SketchToolHome = () => {
   };
 
 
+
   return (
     <div className="sketchtoolhome-container"> 
       <div className="top-bar"> 
@@ -241,6 +270,8 @@ const SketchToolHome = () => {
           image={image} 
           selectedColor={selectedColor}
           onHistoryChange={handleHistoryChange}
+          isUsedUndo={isUsedUndo}
+          setIsEvent={setIsEvent}
           activeTool={selectedTool} // activeTool을 CanvasComponent에 전달
         />
         <div className="control-button">
@@ -250,7 +281,7 @@ const SketchToolHome = () => {
           <button className="undo-button" onClick={handleUndoClick}>
             <img src={undoIcon} /> 
           </button>
-        </div>
+      </div>
       <div className="side-bar">
         <div className="side-function">
           <SidebarButton icon={textIcon} label="side-text" onClick={() => handleButtonClick('text')} /> 
