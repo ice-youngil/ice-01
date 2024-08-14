@@ -1,7 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { fabric } from 'fabric';
 
-// ======================= css ===============================
 import 'assets/css/SketchHome.css';
 
 const CanvasComponent = forwardRef(({
@@ -13,6 +12,8 @@ const CanvasComponent = forwardRef(({
 }, ref) => {
   const canvasRef = useRef(null);
   const [canvas, setCanvas] = useState(null);
+  const [canvasWidth, setCanvasWidth] = useState(0); // 캔버스 너비 상태 관리
+  const [canvasHeight, setCanvasHeight] = useState(0); // 캔버스 높이 상태 관리
 
   useImperativeHandle(ref, () => ({
     clearCanvas: () => {
@@ -43,10 +44,34 @@ const CanvasComponent = forwardRef(({
           canvas.add(img);
           canvas.renderAll();
           saveHistory();
-        });
+        },{ crossOrigin: 'anonymous' });
       }
     },
-    getCanvas: () => canvas // canvas 객체 반환
+    getCanvas: () => canvas, // canvas 객체 반환
+    handleZoom: (zoomIn) => {
+      if (canvas) {
+        const zoomFactor = zoomIn ? 1.1 : 0.95;
+        const currentZoom = canvas.getZoom();
+        const newZoom = currentZoom * zoomFactor;
+
+        // 캔버스 중심을 기준으로 좌표 변환 적용
+        const canvasCenter = new fabric.Point(canvasWidth / 2, canvasHeight / 2);
+
+        // 현재 캔버스의 중심점 좌표 계산
+        const centerPointBeforeZoom = fabric.util.transformPoint(canvasCenter, canvas.viewportTransform);
+
+        // 새로운 줌 레벨로 확대/축소 적용
+        canvas.zoomToPoint(centerPointBeforeZoom, newZoom);
+
+        // 줌 이후 중심점 좌표를 다시 계산
+        const centerPointAfterZoom = fabric.util.transformPoint(canvasCenter, canvas.viewportTransform);
+
+        // 중심이 유지되도록 이동
+        const panX = centerPointBeforeZoom.x - centerPointAfterZoom.x;
+        const panY = centerPointBeforeZoom.y - centerPointAfterZoom.y;
+        canvas.relativePan(new fabric.Point(panX, panY));
+      }
+    }
   }));
 
   const saveHistory = useCallback(() => {
@@ -77,14 +102,21 @@ const CanvasComponent = forwardRef(({
 
         const scaleFactor = Math.min(maxWidth / imgInstance.width, maxHeight / imgInstance.height);
 
-        canvasInstance.setWidth(imgInstance.width * scaleFactor);
-        canvasInstance.setHeight(imgInstance.height * scaleFactor);
+        const canvasW = imgInstance.width * scaleFactor;
+        const canvasH = imgInstance.height * scaleFactor;
 
-        imgInstance.scaleToWidth(canvasInstance.width);
-        imgInstance.scaleToHeight(canvasInstance.height);
+        canvasInstance.setWidth(canvasW);
+        canvasInstance.setHeight(canvasH);
+
+        imgInstance.scaleToWidth(canvasW);
+        imgInstance.scaleToHeight(canvasH);
 
         canvasInstance.add(imgInstance);
         canvasInstance.sendToBack(imgInstance);
+
+        // 캔버스 크기 상태 업데이트
+        setCanvasWidth(canvasW);
+        setCanvasHeight(canvasH);
 
         setCanvas(canvasInstance);
         saveHistory(); // 캔버스 초기화 후 히스토리 저장
@@ -155,7 +187,6 @@ const CanvasComponent = forwardRef(({
 
   useEffect(() => {
     const canvasContainer = document.querySelector('.canvas-container');
-
     if (image && canvasContainer) {
       // canvasContainer.style.overflow = 'hidden';
       // canvasContainer.style.display = 'flex';
@@ -167,7 +198,7 @@ const CanvasComponent = forwardRef(({
 
   return (
     <div className="canvas-window">
-      <canvas ref={canvasRef} className={image ? 'active-canvas' : 'inactive-canvas'} />
+      <canvas ref={canvasRef}  />
       {!image && <div className="placeholder">이미지를 불러와 주세요</div>}
     </div>
   );

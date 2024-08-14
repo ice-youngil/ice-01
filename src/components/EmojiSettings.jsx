@@ -13,7 +13,7 @@ const EmojiSettings = ({
     setEmojiUrl(emojiObject.imageUrl)
     onAddEmoji({
       url: emojiObject.imageUrl
-    })
+    }, {crossOrigin : "anonymous"})
   };
 
   return (
