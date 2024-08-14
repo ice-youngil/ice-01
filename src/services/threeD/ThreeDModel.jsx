@@ -17,7 +17,7 @@ const ThreeDModal = ({ isOpen, onClose, image, shape }) => {
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer();
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setClearColor(0xffffff, 1);
+        renderer.setClearColor(0xf4f1de, 1);
         const canvas = renderer.domElement;
         canvasRef.current = canvas;
         canvas.className="threeD-canvas";
@@ -130,7 +130,7 @@ const ThreeDModal = ({ isOpen, onClose, image, shape }) => {
 
         return () => {
             container.removeChild(canvas);
-            renderer.dispose();
+            renderer.dispose(); 
         };
     }, [isOpen, image, shape]);
 

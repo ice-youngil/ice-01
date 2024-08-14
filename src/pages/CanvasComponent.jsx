@@ -43,7 +43,7 @@ const CanvasComponent = forwardRef(({
           canvas.add(img);
           canvas.renderAll();
           saveHistory();
-        });
+        }, { crossOrigin: 'anonymous' });
       }
     },
     getCanvas: () => canvas // canvas 객체 반환

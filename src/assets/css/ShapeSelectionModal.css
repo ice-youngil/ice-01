@@ -1,5 +1,11 @@
 /* ShapeSelectionModal.css */
 
+@font-face {
+  font-family: "aaaa";
+  font-weight: bold;
+  src: url("assets/font/CookieRun Regular.ttf");
+}
+
 .shape-modal-overlay { 
   position:fixed;
   top: 0;
@@ -21,6 +27,7 @@
 }
 
 .shape-modal-content button {
+  font-family: "aaaa";
   margin: 10px;
   padding: 10px 20px;
   border: none;
@@ -35,5 +42,6 @@
 }
 
 .shape-selection {
+  font-family: "aaaa";
   color : white;
 }

@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import 'assets/css/ToolSettings.css';
 import textApplyButtonIcon from 'assets/icon/text-apply.png';
+import textColorIcon from 'assets/icon/text-color.png';
 
 const TextSettings = ({ onAddText, selectedText, canvasWidth, canvasHeight, closeSettings}) => {
   const [text, setText] = useState('');
   const [fontSize] = useState(20); // 픽셀 단위로 설정
   const [color, setColor] = useState('#000000');
-  const [fontFamily, setFontFamily] = useState('Arial');
+  const [fontFamily, setFontFamily] = useState('yeongdeok');
 
   useEffect(() => {
     if (selectedText) {
@@ -67,11 +68,13 @@ const TextSettings = ({ onAddText, selectedText, canvasWidth, canvasHeight, clos
               id="text-color"
               type="color"
               value={color}
-              onChange={(e) => setColor(e.target.value)}
-            />
+              onChange={(e) => setColor(e.target.value)}/>
+
             <select name="font" className="text-font"
               value={fontFamily}
               onChange={(e) => setFontFamily(e.target.value)}>
+              <option value="yeongdeok">영덕바다체</option>
+              <option value="cookierun">쿠키런체</option>
               <option value="Arial">Arial</option>
               <option value="Courier New">Courier New</option>
               <option value="Georgia">Georgia</option>
@@ -92,25 +95,3 @@ const TextSettings = ({ onAddText, selectedText, canvasWidth, canvasHeight, clos
 };
 
 export default TextSettings;
-
-
-// .text-settings {
-//   display: flex;
-//   flex-direction: row;
-//   justify-content: space-between;
-//   align-items: center;
-//   height: 100%;
-//   margin-left: 1rem;
-//   margin-right: 1rem;
-// }
-
-// .text-option {
-//   display: flex;
-//   flex-direction: column;
-//   gap: 1rem;
-//   width: 250px;
-// }
-
-// .text-input-box, #text-input {
-//   width: 242px;
-// }

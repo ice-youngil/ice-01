@@ -11,3 +11,23 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+
+input::color, textarea {
+  appearance: none;
+  -webkit-appearance: none;
+  -webkit-border-radius: 0;
+  -moz-appearance: none;
+} /* ios 에서 기본 지정한 input style 해제 */
+
+@font-face {
+  font-family: "cookierun";
+  font-weight: bold;
+  src: url("assets/font/CookieRun Regular.ttf");
+}
+
+@font-face {
+  font-family: "yeongdeok";
+  font-weight: bold;
+  src: url("assets/font/Yeongdeok\ Sea.ttf");
+}

@@ -1,8 +1,14 @@
 .threeD-canvas {
-  max-width: 80%;
-  max-height: 80%;
+  max-width: 100%;
+  max-height: 100%;
   border-radius: 10px; 
 } 
+
+canvas {
+  max-width: 85%;
+  max-height: 85%;
+  border-radius: 10px; 
+}
 
 .modal-content {
   width: 80%;
@@ -33,6 +39,7 @@
 }
 
 .threeD-close-button {
+  font-family:"cookierun";
   position: absolute;
   bottom: 10px;
   right: 10px;
@@ -50,6 +57,7 @@
 }
 
 .threeD-save-button {
+  font-family: 'cookierun';
   position: absolute;
   bottom: 10px;
   right: 75px;
