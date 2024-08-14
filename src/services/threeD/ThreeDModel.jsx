@@ -20,7 +20,7 @@ const ThreeDModal = ({ isOpen, onClose, image, shape }) => {
         renderer.setClearColor(0xffffff, 1);
         const canvas = renderer.domElement;
         canvasRef.current = canvas;
-
+        canvas.className="threeD-canvas";
         container.appendChild(canvas);
 
         camera.position.z = 5;
@@ -138,13 +138,13 @@ const ThreeDModal = ({ isOpen, onClose, image, shape }) => {
         if (imageBlob) {
             saveAs(imageBlob, 'result.png');
         }
-      };
+    };
 
     return (
-        <div className={`modal ${isOpen ? 'open' : 'closed'}`}>
+        <div className={`modal-${isOpen ? 'overlay' : 'closed'}`}>
             <div className="modal-content" ref={containerRef}>
-                <button className="ThreeD-save-button" onClick={handleSaveImage}>저장하기</button>
-                <button className="ThreeD-close-button" onClick={onClose}>닫기</button>
+                <button className="threeD-save-button" onClick={handleSaveImage}>저장하기</button>
+                <button className="threeD-close-button" onClick={onClose}>닫기</button>
             </div>
         </div>
     );
