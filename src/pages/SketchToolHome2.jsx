@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'; 
+ import React, { useState, useRef } from 'react'; 
 import SidebarButton from 'components/SidebarButton'; 
 import CanvasComponent from './CanvasComponent2'; 
 import TextSettings from 'components/TextSettings'; 

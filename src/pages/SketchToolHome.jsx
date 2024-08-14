@@ -43,9 +43,6 @@ const SketchToolHome = () => {
   const [isModalOpen, setIsModalOpen] = useState(false); 
   const [is3DModalOpen, setIs3DModalOpen] = useState(false);
   const [selectedShape, setSelectedShape] = useState(null);
-  const screenShotRef = useRef(null); 
-  const [history, setHistory] = useState([]); 
-  const [redoHistory, setRedoHistory] = useState([]); 
   const [imageUrl, setImageUrl] = useState(null);
   const [isWrapperOpen, setIsWrapperOpen] = useState(false);
 
@@ -94,54 +91,19 @@ const SketchToolHome = () => {
       canvasRef.current.handleZoom(zoomIn);
     }
   };
-  const handleHistoryChange = (newHistory) => {
-    setHistory((prevHistory) => [...prevHistory, newHistory]); // history에 새 상태 추가
-    // setRedoHistory([]); // 새로운 작업이 발생하면 redoHistory 초기화
-  };
-  
+
   const handleUndoClick = () => {
-    if (history.length > 0) {
-      const currentState = history[history.length - 1]; // history의 마지막 상태 가져오기
-      setRedoHistory((prevRedoHistory) => [...prevRedoHistory, currentState]); // 현재 상태를 redoHistory에 추가
-      const newHistory = history.slice(0, -1); // history에서 마지막 상태 제거
-      setHistory(newHistory); // history 업데이트
-  
-      const lastState = newHistory[newHistory.length - 1];
-      if (canvasRef.current && lastState) {
-        const canvas = canvasRef.current.getCanvas();
-        canvas.loadFromJSON(lastState, () => {
-          canvas.getObjects('image').forEach((img) => {
-            img.set({
-              selectable: false,
-              evented: false,
-            });
-          });
-          canvas.renderAll();
-        });
-      }
+    if (canvasRef.current) {
+      canvasRef.current.undo(); // CanvasComponent의 undo 함수 호출
     }
   };
   
   const handleRedoClick = () => {
-    if (redoHistory.length > 0) {
-      const redoState = redoHistory[redoHistory.length - 1]; // redoHistory의 마지막 상태 가져오기
-      setRedoHistory(redoHistory.slice(0, -1)); // redoHistory에서 마지막 상태 제거
-      setHistory((prevHistory) => [...prevHistory, redoState]); // redo 상태를 history에 추가
-  
-      if (canvasRef.current) {
-        const canvas = canvasRef.current.getCanvas();
-        canvas.loadFromJSON(redoState, () => {
-          canvas.getObjects('image').forEach((img) => {
-            img.set({
-              selectable: false,
-              evented: false,
-            });
-          });
-          canvas.renderAll();
-        });
-      }
+    if (canvasRef.current) {
+      canvasRef.current.redo(); // CanvasComponent의 redo 함수 호출
     }
   };
+
   const handleApplyModel = () => {
     if (canvasRef.current) {
       const canvas = canvasRef.current.getCanvas();
@@ -240,8 +202,6 @@ const SketchToolHome = () => {
           toolSize={toolSize}
           image={image} 
           selectedColor={selectedColor}
-          onHistoryChange={handleHistoryChange}
-          activeTool={selectedTool} // activeTool을 CanvasComponent에 전달
         />
         <div className="control-button">
           <button className="redo-button" onClick={handleRedoClick}>

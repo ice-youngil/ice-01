@@ -1,7 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { fabric } from 'fabric';
 
-// ======================= css ===============================
 import 'assets/css/SketchHome.css';
 
 const CanvasComponent = forwardRef(({
@@ -13,15 +12,21 @@ const CanvasComponent = forwardRef(({
 }, ref) => {
   const canvasRef = useRef(null);
   const [canvas, setCanvas] = useState(null);
-  const [canvasWidth, setCanvasWidth] = useState(0); // 캔버스 너비 상태 관리
-  const [canvasHeight, setCanvasHeight] = useState(0); // 캔버스 높이 상태 관리
+  const [canvasWidth, setCanvasWidth] = useState(0);
+  const [canvasHeight, setCanvasHeight] = useState(0);
+  const [history, setHistory] = useState([]); 
+  const [redoHistory, setRedoHistory] = useState([]);
+  const [undoPerformed, setUndoPerformed] = useState(false); 
+  const [isUndoing, setIsUndoing] = useState(false); // undo 중인지 여부를 추적
 
   useImperativeHandle(ref, () => ({
     clearCanvas: () => {
       if (canvas) {
         canvas.clear();
+        setHistory([]);
+        setRedoHistory([]);
         if (onHistoryChange) {
-          onHistoryChange([]); // 히스토리 초기화
+          onHistoryChange([]); 
         }
       }
     },
@@ -36,7 +41,7 @@ const CanvasComponent = forwardRef(({
         });
         canvas.add(text);
         canvas.renderAll();
-        saveHistory();
+        onCanvasChange(); // 히스토리 저장
       }
     },
     addEmoji: (EmojiSettings) => {
@@ -44,51 +49,97 @@ const CanvasComponent = forwardRef(({
         fabric.Image.fromURL(EmojiSettings.url, (img) => {
           canvas.add(img);
           canvas.renderAll();
-          saveHistory();
+          onCanvasChange(); // 히스토리 저장
         }, { crossOrigin: 'anonymous' });
       }
     },
-    getCanvas: () => canvas, // canvas 객체 반환
+    getCanvas: () => canvas, 
     handleZoom: (zoomIn) => {
-        if (canvas) {
-          const zoomFactor = zoomIn ? 1.1 : 0.95;
-          const currentZoom = canvas.getZoom();
-          const newZoom = currentZoom * zoomFactor;
+      if (canvas) {
+        const zoomFactor = zoomIn ? 1.1 : 1/1.1;
+        const currentZoom = canvas.getZoom();
+        const newZoom = currentZoom * zoomFactor;
+        const canvasCenter = new fabric.Point(canvasWidth / 2, canvasHeight / 2);
+        const centerPointBeforeZoom = fabric.util.transformPoint(canvasCenter, canvas.viewportTransform);
+        canvas.zoomToPoint(centerPointBeforeZoom, newZoom);
+        const centerPointAfterZoom = fabric.util.transformPoint(canvasCenter, canvas.viewportTransform);
+        const panX = centerPointBeforeZoom.x - centerPointAfterZoom.x;
+        const panY = centerPointBeforeZoom.y - centerPointAfterZoom.y;
+        canvas.relativePan(new fabric.Point(panX, panY));
+      }
+    },
+    undo: () => {
+      if (history.length >= 1) {
+        const currentState = history[history.length - 1];
+        setRedoHistory((prevRedoHistory) => [...prevRedoHistory, currentState]);
+        const newHistory = history.slice(0, -1);
+        setHistory(newHistory);
+        setUndoPerformed(true); // undo 버튼을 눌렀음을 표시
+        setIsUndoing(true); // undo 중임을 표시
   
-          // 캔버스 중심을 기준으로 좌표 변환 적용
-          const canvasCenter = new fabric.Point(canvasWidth / 2, canvasHeight / 2);
-  
-          // 현재 캔버스의 중심점 좌표 계산
-          const centerPointBeforeZoom = fabric.util.transformPoint(canvasCenter, canvas.viewportTransform);
-  
-          // 새로운 줌 레벨로 확대/축소 적용
-          canvas.zoomToPoint(centerPointBeforeZoom, newZoom);
-  
-          // 줌 이후 중심점 좌표를 다시 계산
-          const centerPointAfterZoom = fabric.util.transformPoint(canvasCenter, canvas.viewportTransform);
-  
-          // 중심이 유지되도록 이동
-          const panX = centerPointBeforeZoom.x - centerPointAfterZoom.x;
-          const panY = centerPointBeforeZoom.y - centerPointAfterZoom.y;
-          canvas.relativePan(new fabric.Point(panX, panY));
+        const lastState = newHistory[newHistory.length - 1];
+        if (canvas && lastState) {
+          canvas.loadFromJSON(lastState, () => {
+            canvas.getObjects('image').forEach((img) => {
+              img.set({
+                selectable: false,
+                evented: false,
+              });
+            });
+            canvas.renderAll();
+            setIsUndoing(false); // undo 작업 완료 후 false로 설정
+          });
         }
       }
+    },
+    redo: () => {
+      if (redoHistory.length > 0) {
+        const redoState = redoHistory[redoHistory.length - 1];
+        setRedoHistory(redoHistory.slice(0, -1));
+        setHistory((prevHistory) => [...prevHistory, redoState]);
+  
+        if (canvas) {
+          canvas.loadFromJSON(redoState, () => {
+            canvas.getObjects('image').forEach((img) => {
+              img.set({
+                selectable: false,
+                evented: false,
+              });
+            });
+            canvas.renderAll();
+          });
+        }
+      }
+    }
   }));
 
-  const saveHistory = useCallback(() => {
-    if (canvas && onHistoryChange) {
+  const onCanvasChange = useCallback(() => { //handleSaveHistory
+    console.log(canvas);
+    console.log(isUndoing)
+    if (canvas && !isUndoing) { // undo 중이 아닐 때만 실행
       const json = canvas.toJSON();
-      onHistoryChange(json); // 히스토리 변경 사항을 부모 컴포넌트로 전달
+      console.log('New history created:', json); // 새로운 히스토리가 생성될 때마다 콘솔에 출력
+      setHistory((prevHistory) => [...prevHistory, json]);
+
+      // undoPerformed가 true이고 새로운 히스토리가 추가될 때만 redoHistory 초기화
+      if (undoPerformed && history.length > 0) {
+        setRedoHistory([]);
+        setUndoPerformed(false); // 초기화 후 다시 false로 설정
+        setIsUndoing(true);
+      }
+
+      if (onHistoryChange) {
+        onHistoryChange(json); 
+      }
     }
-  }, [canvas, onHistoryChange]);
+  });
 
   useEffect(() => {
     if (image) {
       const imgElement = new Image();
-      imgElement.crossOrigin = 'anonymous'; // CORS 설정 추가
+      imgElement.crossOrigin = 'anonymous'; 
       imgElement.src = image;
       imgElement.onload = () => {
-        // 기존에 캔버스가 있고 DOM 요소가 존재하는지 확인 후 초기화
         if (canvas && canvasRef.current) {
           canvas.dispose();
         }
@@ -98,8 +149,8 @@ const CanvasComponent = forwardRef(({
           selectable: false,
         });
 
-        const maxWidth = window.innerWidth * 0.8; // 최대 너비 (윈도우 크기의 80%)
-        const maxHeight = window.innerHeight * 0.8; // 최대 높이 (윈도우 크기의 80%)
+        const maxWidth = window.innerWidth * 0.8;
+        const maxHeight = window.innerHeight * 0.8;
 
         const scaleFactor = Math.min(maxWidth / imgInstance.width, maxHeight / imgInstance.height);
 
@@ -115,19 +166,16 @@ const CanvasComponent = forwardRef(({
         canvasInstance.add(imgInstance);
         canvasInstance.sendToBack(imgInstance);
 
-        // 캔버스 크기 상태 업데이트
         setCanvasWidth(canvasW);
         setCanvasHeight(canvasH);
 
         setCanvas(canvasInstance);
-        saveHistory(); // 캔버스 초기화 후 히스토리 저장
       };
     }
   }, [image]);
 
   useEffect(() => {
     if (canvas) {
-      // 이전 이벤트 핸들러 제거
       canvas.off('mouse:down');
       canvas.off('mouse:move');
       canvas.off('mouse:up');
@@ -141,7 +189,6 @@ const CanvasComponent = forwardRef(({
         canvas.freeDrawingBrush.width = toolSize;
         canvas.freeDrawingBrush.color = selectedColor;
       } else if (selectedTool === 'panning') {
-        // 패닝 기능 활성화
         canvas.isDrawingMode = false;
         canvas.selection = false;
         canvas.defaultCursor = 'grab';
@@ -154,11 +201,9 @@ const CanvasComponent = forwardRef(({
           panning = true;
           canvas.defaultCursor = 'grabbing';
           if (event.e.touches) {
-            // 터치 이벤트 처리
             startX = event.e.touches[0].clientX;
             startY = event.e.touches[0].clientY;
           } else {
-            // 마우스 이벤트 처리
             startX = event.e.clientX;
             startY = event.e.clientY;
           }
@@ -168,13 +213,11 @@ const CanvasComponent = forwardRef(({
           if (panning) {
             let deltaX, deltaY;
             if (event.e.touches) {
-              // 터치 이벤트 처리
               deltaX = event.e.touches[0].clientX - startX;
               deltaY = event.e.touches[0].clientY - startY;
               startX = event.e.touches[0].clientX;
               startY = event.e.touches[0].clientY;
             } else {
-              // 마우스 이벤트 처리
               deltaX = event.e.clientX - startX;
               deltaY = event.e.clientY - startY;
               startX = event.e.clientX;
@@ -194,7 +237,6 @@ const CanvasComponent = forwardRef(({
         canvas.on('mouse:move', handlePanMove);
         canvas.on('mouse:up', handlePanEnd);
 
-        // Mobile touch events
         canvas.on('touch:down', handlePanStart);
         canvas.on('touch:move', handlePanMove);
         canvas.on('touch:up', handlePanEnd);
@@ -208,31 +250,28 @@ const CanvasComponent = forwardRef(({
 
   useEffect(() => {
     if (canvas) {
-      const saveOnEvent = () => saveHistory();
-
-      canvas.on('object:added', saveOnEvent);
-      canvas.on('object:modified', saveOnEvent);
-      canvas.on('path:created', saveOnEvent);
-
+      
+      const onCanvasChangeWrapper = () => {
+        if (!canvas._historySaved) { 
+          onCanvasChange(); // 캔버스 상태가 변경될 때마다 히스토리 저장
+          canvas._historySaved = true; 
+          setTimeout(() => {
+            canvas._historySaved = false; 
+          }, 0);
+        }
+      };
+    
+      canvas.on('object:added', onCanvasChangeWrapper);
+      canvas.on('object:modified', onCanvasChangeWrapper);
+      canvas.on('path:created', onCanvasChangeWrapper);
+    
       return () => {
-        canvas.off('object:added', saveOnEvent);
-        canvas.off('object:modified', saveOnEvent);
-        canvas.off('path:created', saveOnEvent);
+        canvas.off('object:added', onCanvasChangeWrapper);
+        canvas.off('object:modified', onCanvasChangeWrapper);
+        canvas.off('path:created', onCanvasChangeWrapper);
       };
     }
-  }, [canvas, saveHistory]);
-
-  useEffect(() => {
-    const canvasContainer = document.querySelector('.canvas-container');
-
-    if (image && canvasContainer) {
-      // canvasContainer.style.overflow = 'hidden';
-      // canvasContainer.style.display = 'flex';
-      // canvasContainer.style.alignItems = 'center';
-      // canvasContainer.style.justifyContent = 'center';
-      // canvasContainer.style.transformOrigin = 'center center';
-    }
-  }, [image]);
+  }, [canvas, onCanvasChange]);
 
   return (
     <div className="canvas-window">
