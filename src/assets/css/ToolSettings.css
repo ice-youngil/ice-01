@@ -69,6 +69,11 @@
     flex-direction: column;
     gap: 1rem;
     align-items: center;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 3;
   }
 
   /* 펜 css 영역 */

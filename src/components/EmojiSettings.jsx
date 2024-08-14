@@ -18,7 +18,7 @@ const EmojiSettings = ({
 
   return (
     <div className="emoji-settings">
-      <Picker onEmojiClick={handleSelectEmoji} />
+      <Picker onEmojiClick={handleSelectEmoji} theme="auto"/>
       <button className="close-button" onClick={closeSettings}>
         닫기
       </button>
