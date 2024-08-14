@@ -4,13 +4,17 @@ import Picker from 'emoji-picker-react';
 // ======================= css ===============================
 import 'assets/css/ToolSettings.css';
 
+
 const EmojiSettings = ({
   onAddEmoji,
   setEmojiUrl,
   closeSettings
 }) => {
+
   const handleSelectEmoji = (emojiObject) => {
+
     setEmojiUrl(emojiObject.imageUrl)
+    console.log(emojiObject.imageUrl);
     onAddEmoji({
       url: emojiObject.imageUrl
     })
@@ -18,7 +22,7 @@ const EmojiSettings = ({
 
   return (
     <div className="emoji-settings">
-      <Picker onEmojiClick={handleSelectEmoji} />
+      <Picker onEmojiClick={handleSelectEmoji} theme='dark'/>
       <button className="close-button" onClick={closeSettings}>
         닫기
       </button>

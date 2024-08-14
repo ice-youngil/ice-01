@@ -3,11 +3,29 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import 'assets/css/Model.css';
 import { saveAs } from 'file-saver';
+import { loadScript } from 'utils/loadScripts';
 
 const ThreeDModal = ({ isOpen, onClose, image, shape }) => {
     const containerRef = useRef(null);
     const canvasRef = useRef(null);
     const [imageBlob, setImageBlob] = useState(null);
+    const capturingRef = useRef(false);
+    const capturerRef = useRef(null);
+    const frameCountRef = useRef(0);
+    const [scriptLoaded, setScriptLoaded] = useState(false);
+    useEffect(() => {
+        const setup = async () => {
+          try {
+            // Load CCapture.js dynamically
+            await loadScript('https://cdn.jsdelivr.net/npm/ccapture.js-npmfixed@1.1.0/build/CCapture.all.min.js');
+            setScriptLoaded(true);
+          } catch (error) {
+            console.error('Failed to load CCapture.js:', error);
+          }
+        };
+    
+        setup();
+      }, []);
 
     useEffect(() => {
         if (!isOpen || !image) return;
@@ -113,26 +131,53 @@ const ThreeDModal = ({ isOpen, onClose, image, shape }) => {
 
                 animate();
             }
-
-            // 이미지 데이터 캡처
-            const captureImage = () => {
-                renderer.render(scene, camera);
-                canvas.toBlob((blob) => {
-                    if (blob) {
-                        setImageBlob(blob);
-                    }
-                }, 'image/png');
-            };
-
-            // 렌더링 후 캡처
-            setTimeout(captureImage, 1000); // 렌더링 시간이 필요한 경우 조정
         };
+
+    // CCapture.js setup
+    capturerRef.current = new window.CCapture({ format: 'webm', framerate: 100 });
+
+    const startCapture = () => {
+      capturingRef.current = true;
+      capturerRef.current.start();
+    };
+
+    const stopCapture = () => {
+      capturingRef.current = false;
+      capturerRef.current.stop();
+      capturerRef.current.save((blob) => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'animation.mp4';
+        link.click();
+      });
+    };
+
+    const captureFrame = () => {
+      if (capturingRef.current) {
+        capturerRef.current.capture(canvas);
+        frameCountRef.current++;
+        if (frameCountRef.current < 3000) { // Capture 300 frames
+          requestAnimationFrame(captureFrame);
+        } else {
+          stopCapture();
+        }
+      } else {
+        requestAnimationFrame(captureFrame);
+      }
+    };
+
+    // Start capturing after a short delay
+    setTimeout(() => {
+      startCapture();
+      captureFrame();
+    }, 1000);
 
         return () => {
             container.removeChild(canvas);
             renderer.dispose();
         };
-    }, [isOpen, image, shape]);
+    }, [isOpen, image, shape, scriptLoaded]);
 
     const handleSaveImage = () => {
         if (imageBlob) {
