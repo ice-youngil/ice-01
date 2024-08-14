@@ -25,9 +25,7 @@ import redoIcon from 'assets/icon/redo.png';
 import handIcon from 'assets/icon/hand.png';
 import InIcon from 'assets/icon/plus.png';
 import OutIcon from 'assets/icon/minus.png';
-import panningIcon from 'assets/icon/panning.png';
-import explainIcon from 'assets/icon/explain.png';
-import explainCloseIcon from 'assets/icon/explain-close.png';
+import panningIcon from 'assets/icon/panning.png'; // 패닝 아이콘
 
 import EmojiSettings from 'components/EmojiSettings'; 
 
@@ -50,7 +48,6 @@ const SketchToolHome = () => {
   const [redoHistory, setRedoHistory] = useState([]); 
   const [imageUrl, setImageUrl] = useState(null);
   const [isWrapperOpen, setIsWrapperOpen] = useState(false);
-  const [isDescriptionVisible, setDescriptionVisible] = useState(false);
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
@@ -221,10 +218,6 @@ const SketchToolHome = () => {
     setHistory((prevHistory) => [...prevHistory, newHistory]); 
   };
 
-  const toggleDescription = () => {
-    setDescriptionVisible(!isDescriptionVisible);
-  }
-
   return (
     <div className="sketchtoolhome-container"> 
       <div className="top-bar"> 
@@ -265,7 +258,6 @@ const SketchToolHome = () => {
           </button>
         </div>
       </div>
-
       <div className="side-bar">
         <div className="side-function">
           <SidebarButton icon={textIcon} label="side-text" onClick={() => handleButtonClick('text')} /> 
@@ -318,54 +310,6 @@ const SketchToolHome = () => {
         image={imageUrl}
         shape={selectedShape} 
       />
-      <div className="explain">
-        <button className="explain-button" onClick={toggleDescription}>
-          {isDescriptionVisible ? '' : ''}
-          <img src={explainIcon} alt="Explain"/>
-        </button>
-        {isDescriptionVisible && (
-          <div className="explain-overlay">
-            <div className="explain-box">
-              <div className="exp-1">
-                <SidebarButton icon={textIcon} label="explain-text"></SidebarButton>
-                <p className="exp-2">: 텍스트 입력하기</p>
-              </div>
-              <div className="exp-1">
-                <SidebarButton icon={elementIcon} label="explain-elements"></SidebarButton>
-                <p className="exp-2">: 스티커 추가하기</p>
-              </div>
-              <div className="exp-1">
-                <SidebarButton icon={penIcon} label="explain-pen"></SidebarButton>
-                <p className="exp-2">: 펜 설정하기</p>
-              </div>
-              <div className="exp-1">
-               <SidebarButton icon={handIcon} label="explain-handdler"></SidebarButton>
-               <p className="exp-2">: 요소 선택하기</p>
-              </div>
-              <div className="exp-1">
-               <SidebarButton icon={panningIcon} label="explain-panning"></SidebarButton>
-               <p className="exp-2">: 이미지 이동하기</p>
-              </div>
-              <div className="exp-1">
-                <SidebarButton icon={OutIcon} label="explain-zoom-out"></SidebarButton>
-                <p className="exp-2">: 이미지 축소하기</p>
-              </div>
-              <div className="exp-1">
-                <SidebarButton icon={InIcon} label="explain-zoom-in"></SidebarButton>
-                <p className="exp-2">: 이미지 확대하기</p>
-              </div>
-              <div className="exp-1">
-                <SidebarButton icon={threeDIcon} label="explain-apply"> </SidebarButton>
-                <p className="exp-2">: 문패 미리보기</p>
-              </div>
-              <button className="explain-close" onClick={toggleDescription}>
-                <img src={explainCloseIcon} alt="explain-close"/>
-            </button>
-            </div>
-            
-          </div>
-        )}
-      </div>
     </div>
   );
 };

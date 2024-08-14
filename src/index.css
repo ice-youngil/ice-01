@@ -27,6 +27,12 @@ input::color, textarea {
 }
 
 @font-face {
+  font-family: "cookierun-normal";
+  font-weight: normal;
+  src: url("assets/font/CookieRun Regular.ttf");
+}
+
+@font-face {
   font-family: "yeongdeok";
   font-weight: bold;
   src: url("assets/font/Yeongdeok\ Sea.ttf");

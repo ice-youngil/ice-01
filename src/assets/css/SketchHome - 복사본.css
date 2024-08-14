@@ -94,10 +94,6 @@
     display: none;
 }
 
-.explain {
-    z-index: 3;
-}
-
 @media only screen and (max-width: 1000px) {
     .side-bar {
         position: fixed;
@@ -154,59 +150,6 @@
         cursor: pointer;        
     }
 
-    .explain, .explain-button {
-        position: fixed;
-        top: 7.5%;
-        right: 3%;
-        width: 3rem;
-        height: 3rem;
-        background: none;
-        border: none;
-    }
-    .explain-overlay {
-        position:fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 4;
-    }
-    .explain-box {
-        background: #3d405b;
-        padding: 20px;
-        border-radius: 8px;
-        width: 80vw;
-        height: 75vh;
-        display: flex;
-        flex-direction: column;
-        gap: 2rem;
-        justify-content: center;
-    }
-    .explain-text, .explain-elements, .explain-pen, .explain-handdler, .explain-panning, .explain-zoom-out, .explain-zoom-in, .explain-apply {
-        background: none;
-        border: none;
-        width: 30px;
-    }
-    .exp-1{
-        display: flex;
-        flex-direction: row;
-        gap: 2rem;
-        height: 2rem;
-    }
-    .exp-2{
-        color: #f4f1de;
-        font-family: 'cookierun-normal';
-        height: 1rem;
-    }
-    .explain-close {
-        background: none;
-        border: none;
-        position: relative
-    }
 } /* 모바일 및 타블렛 대응 */
 
 @media only screen and (min-width: 1001px) {
