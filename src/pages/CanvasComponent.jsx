@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState, useCallback, forwardRef, useImperat
 import { fabric } from 'fabric';
 
 // ======================= css ===============================
-import 'assets/css/SketchHome.css';
+// import 'assets/css/SketchHome.css';
 
 const CanvasComponent = forwardRef(({
   selectedTool,
@@ -11,6 +11,7 @@ const CanvasComponent = forwardRef(({
   selectedColor,
   onHistoryChange,
 }, ref) => {
+
   const canvasRef = useRef(null);
   const [canvas, setCanvas] = useState(null);
 
@@ -39,11 +40,12 @@ const CanvasComponent = forwardRef(({
     },
     addEmoji: (EmojiSettings) => {
       if (canvas) {
+        console.log("이모지세팅");
         fabric.Image.fromURL(EmojiSettings.url, (img) => {
           canvas.add(img);
           canvas.renderAll();
           saveHistory();
-        });
+        }, {crossOrigin: 'anonymous' });
       }
     },
     getCanvas: () => canvas // canvas 객체 반환
@@ -72,19 +74,31 @@ const CanvasComponent = forwardRef(({
           selectable: false,
         });
 
+        canvasInstance.centerObject(imgInstance);
+        canvasInstance.add(imgInstance);
+
         const maxWidth = window.innerWidth * 0.8; // 최대 너비 (윈도우 크기의 80%)
         const maxHeight = window.innerHeight * 0.8; // 최대 높이 (윈도우 크기의 80%)
 
-        const scaleFactor = Math.min(maxWidth / imgInstance.width, maxHeight / imgInstance.height);
+        const widthRatio = maxWidth / imgElement.width;
+        const heightRatio = maxHeight / imgElement.height;
+      
+        const scaleFactor = Math.min(1, Math.min(widthRatio, heightRatio));
+
+        // const x = maxWidth / 2 - (imgElement.width * scaleFactor) / 2;
+        // const y = maxHeight / 2 - (imgElement.height * scaleFactor) / 2;
+      
+        // console.log(imgInstance.width);
+
+        // canvasInstance.absolutePan(new fabric.Point(-x, -y));
 
         canvasInstance.setWidth(imgInstance.width * scaleFactor);
         canvasInstance.setHeight(imgInstance.height * scaleFactor);
 
-        imgInstance.scaleToWidth(canvasInstance.width);
-        imgInstance.scaleToHeight(canvasInstance.height);
-
-        canvasInstance.add(imgInstance);
-        canvasInstance.sendToBack(imgInstance);
+        // imgInstance.scaleToWidth(canvasInstance.width);
+        // imgInstance.scaleToHeight(canvasInstance.height);
+        
+        
 
         setCanvas(canvasInstance);
         saveHistory(); // 캔버스 초기화 후 히스토리 저장
@@ -155,20 +169,24 @@ const CanvasComponent = forwardRef(({
 
   useEffect(() => {
     const canvasContainer = document.querySelector('.canvas-container');
+    const upperCanvas = document.getElementById('aaa');
+    
+
+    console.log(upperCanvas);
+
 
     if (image && canvasContainer) {
-      canvasContainer.style.position = 'relative';
       canvasContainer.style.overflow = 'hidden';
       canvasContainer.style.display = 'flex';
-      canvasContainer.style.alignItems = 'center';
-      canvasContainer.style.justifyContent = 'center';
-      canvasContainer.style.transformOrigin = 'center center';
+      canvasContainer.style.alignItems="center"
+    
+
     }
   }, [image]);
 
   return (
-    <div className="canvas-container">
-      <canvas ref={canvasRef} className={image ? 'active-canvas' : 'inactive-canvas'} />
+    <div className='canvas-window'>
+      <canvas ref={canvasRef} id="aaa" />
       {!image && <div className="placeholder">이미지를 불러와 주세요</div>}
     </div>
   );
