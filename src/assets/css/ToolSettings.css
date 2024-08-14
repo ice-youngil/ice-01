@@ -146,13 +146,15 @@
 
   /* 이모지 css 영역 */
   .emoji-settings {
-    min-width: 50%;
-    min-height: 75%;
     display: flex;
     justify-content: center;
     flex-direction: column;
     gap: 1rem;
     align-items: center;
+    position: fixed;
+    top: 6%;
+    left: 7%;
+    z-index: 3;
   }
 
   /* 펜 css 영역 */
