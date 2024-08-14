@@ -14,34 +14,26 @@
 }
 
 .shape-modal-content {
-  background: white;
+  background: #81b29a;
   padding: 20px;
   border-radius: 8px;
   text-align: center;
-}
-
-.shape-modal-content h2 {
-  margin-bottom: 20px;
 }
 
 .shape-modal-content button {
   margin: 10px;
   padding: 10px 20px;
   border: none;
-  background: #4b4b4b;
+  background: #e07a5f;
   color: white;
   cursor: pointer;
   border-radius: 4px;
 }
 
 .shape-modal-content button:hover {
-  background: #0056b3;
+  background: #e4623e;
 }
 
-.close-button {
-  background: #e07a5f;
-}
-
-.close-button:hover {
-  background: #e07a5f;
+.shape-selection {
+  color : white;
 }

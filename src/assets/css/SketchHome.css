@@ -86,6 +86,9 @@
     transition: transform 0.2s ease; 
     border: 5px solid black;
     display: flex;
+    border-radius: 10px;
+    max-width: 100%;
+    max-height: 100%;
 }
 
 .inactive-canvas {
@@ -133,7 +136,7 @@
         cursor: grab; 
         transition: transform 0.2s ease; 
         border: 5px solid black;
-        transform: translate(12.5%, 5%);
+        transform: translate(0%, -10%);
     }
 
     .control-button {
@@ -192,7 +195,6 @@
         cursor: grab; 
         transition: transform 0.2s ease; 
         border: 5px solid black;
-        transform: translate(12.5%, 5%);
     }
 
     .control-button {

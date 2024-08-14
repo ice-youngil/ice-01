@@ -1,6 +1,7 @@
 // ToolSettings.jsx
 import React from 'react';
 import 'assets/css/ToolSettings.css';
+import penCloseButtonIcon from 'assets/icon/pen-close.png';
 
 const PenSettings = ({
   toolSize,
@@ -22,14 +23,17 @@ const PenSettings = ({
       />
       <div className="color-picker-container">
         <input
+          id="pen-color"
           type="color"
           value={selectedColor}
           onChange={(e) => setSelectedColor(e.target.value)}
         />
       </div>
-      <button className="close-button" onClick={closeSettings}>
-        닫기
-      </button>
+      <div className="pen-close-button">
+        <button className="pen-close" onClick={closeSettings}>
+          <img src={penCloseButtonIcon} alt="penClose" />
+        </button>
+      </div>
     </div>
   );
 };
