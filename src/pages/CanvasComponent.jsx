@@ -99,6 +99,8 @@ const CanvasComponent = forwardRef(({
         setHistory((prevHistory) => [...prevHistory, redoState]);
   
         if (canvas) {
+          setUndoPerformed(false); // redo 작업 중에는 undoPerformed를 false로 설정
+          setIsUndoing(true); // undo 중임을 표시
           canvas.loadFromJSON(redoState, () => {
             canvas.getObjects('image').forEach((img) => {
               img.set({
@@ -107,15 +109,21 @@ const CanvasComponent = forwardRef(({
               });
             });
             canvas.renderAll();
+            setIsUndoing(false); //undo 작업 완료 후에도 false로 설정한다.
           });
         }
       }
     }
   }));
 
+  useEffect(() => {
+    if (canvas && history.length === 0) {
+      const initialCanvasState = canvas.toJSON();
+      setHistory([initialCanvasState]);
+    }
+  }, [canvas]);
+
   const onCanvasChange = useCallback(() => { //handleSaveHistory
-    console.log(canvas);
-    console.log(isUndoing)
     if (canvas && !isUndoing) { // undo 중이 아닐 때만 실행
       const json = canvas.toJSON();
       console.log('New history created:', json); // 새로운 히스토리가 생성될 때마다 콘솔에 출력
@@ -125,7 +133,7 @@ const CanvasComponent = forwardRef(({
       if (undoPerformed && history.length > 0) {
         setRedoHistory([]);
         setUndoPerformed(false); // 초기화 후 다시 false로 설정
-        setIsUndoing(true);
+        // setIsUndoing(false);
       }
 
       if (onHistoryChange) {
